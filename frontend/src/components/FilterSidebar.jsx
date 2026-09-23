@@ -7,78 +7,120 @@ export default function FilterSidebar({
   onInStockChange,
   onResetFilters,
 }) {
+  const MAX_LIMIT = 5000000;
+
+  // Handlers with validation clamping
+  const handleMinChange = (value) => {
+    const numericValue = Number(value);
+    // Ensure min price never exceeds the current max price
+    if (numericValue > maxPrice) {
+      onMinPriceChange(maxPrice);
+    } else {
+      onMinPriceChange(Math.max(0, numericValue));
+    }
+  };
+
+  const handleMaxChange = (value) => {
+    const numericValue = Number(value);
+    // Ensure max price never drops below current min price or exceeds overall cap
+    if (numericValue < minPrice) {
+      onMaxPriceChange(minPrice);
+    } else {
+      onMaxPriceChange(Math.min(MAX_LIMIT, numericValue));
+    }
+  };
+
   return (
-    <aside className="w-full rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:w-64 md:shrink-0">
-      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-        <h2 className="text-base font-semibold text-gray-900">Filters</h2>
+    <aside className="w-full rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:w-64">
+      <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
+        <h2 className="text-base font-semibold text-gray-800">Filters</h2>
         <button
           onClick={onResetFilters}
-          className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+          className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
         >
           Reset All
         </button>
       </div>
 
-      <div className="mt-5 space-y-6">
-        {/* Price Range Filter */}
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            Price Range (₦)
-          </label>
+      {/* Price Range Filter */}
+      <div className="space-y-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          Price Range (₦)
+        </h3>
 
-          {/* Min & Max Number Inputs */}
-          <div className="mt-2 flex items-center gap-2">
-            <div className="flex-1">
-              <span className="text-[10px] text-gray-400">Min</span>
-              <input
-                type="number"
-                min="0"
-                value={minPrice}
-                onChange={(e) => onMinPriceChange(Number(e.target.value))}
-                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-800 focus:border-emerald-500 focus:outline-none"
-                placeholder="0"
-              />
-            </div>
-            <span className="mt-3 text-gray-400">-</span>
-            <div className="flex-1">
-              <span className="text-[10px] text-gray-400">Max</span>
-              <input
-                type="number"
-                min="0"
-                value={maxPrice}
-                onChange={(e) => onMaxPriceChange(Number(e.target.value))}
-                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-800 focus:border-emerald-500 focus:outline-none"
-                placeholder="500000"
-              />
-            </div>
+        {/* Min & Max Numeric Inputs */}
+        <div className="flex items-center space-x-2">
+          <div className="flex-1">
+            <label className="text-xs text-gray-400">Min</label>
+            <input
+              type="number"
+              min="0"
+              max={maxPrice} // Dynamic cap: cannot exceed maxPrice
+              value={minPrice}
+              onChange={(e) => handleMinChange(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-800 focus:border-emerald-500 focus:outline-none"
+            />
           </div>
-
-          {/* Slider for Max Price (Starts at 0, steps by 1000) */}
-          <input
-            type="range"
-            min="0"
-            max="500000"
-            step="1000"
-            value={maxPrice}
-            onChange={(e) => onMaxPriceChange(Number(e.target.value))}
-            className="mt-3 w-full accent-emerald-600"
-          />
-          <div className="flex justify-between text-[10px] text-gray-400">
-            <span>₦0</span>
-            <span>₦500,000</span>
+          <span className="mt-5 text-gray-400">-</span>
+          <div className="flex-1">
+            <label className="text-xs text-gray-400">Max</label>
+            <input
+              type="number"
+              min={minPrice} // Dynamic floor: cannot drop below minPrice
+              max={MAX_LIMIT}
+              value={maxPrice}
+              onChange={(e) => handleMaxChange(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-800 focus:border-emerald-500 focus:outline-none"
+            />
           </div>
         </div>
 
-        {/* Stock Status Toggle */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-          <span className="text-sm font-medium text-gray-700">In Stock Only</span>
+        {/* Min Price Range Slider */}
+        <div>
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Min Slider</span>
+            <span>₦{minPrice.toLocaleString()}</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max={maxPrice}
+            step="10000"
+            value={minPrice}
+            onChange={(e) => handleMinChange(e.target.value)}
+            className="w-full accent-emerald-600 cursor-pointer"
+          />
+        </div>
+
+        {/* Max Price Range Slider */}
+        <div>
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Max Slider</span>
+            <span>₦{maxPrice.toLocaleString()}</span>
+          </div>
+          <input
+            type="range"
+            min={minPrice}
+            max={MAX_LIMIT}
+            step="10000"
+            value={maxPrice}
+            onChange={(e) => handleMaxChange(e.target.value)}
+            className="w-full accent-emerald-600 cursor-pointer"
+          />
+        </div>
+      </div>
+
+      {/* Stock Status Filter */}
+      <div className="mt-6 border-t border-gray-100 pt-4">
+        <label className="flex items-center space-x-2.5 cursor-pointer">
           <input
             type="checkbox"
             checked={inStockOnly}
             onChange={(e) => onInStockChange(e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
           />
-        </div>
+          <span className="text-sm text-gray-700">In Stock Only</span>
+        </label>
       </div>
     </aside>
   );
