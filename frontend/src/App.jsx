@@ -11,7 +11,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(500000);
+  const [maxPrice, setMaxPrice] = useState(5000000); // Set default ceiling to 5M
   const [inStockOnly, setInStockOnly] = useState(false);
   const [cartItems, setCartItems] = useState([]);
 
@@ -56,12 +56,13 @@ export default function App() {
     setSelectedCategory('All');
     setSearchQuery('');
     setSortBy('featured');
-    setMaxPrice(500000);
+    setMinPrice(0);
+    setMaxPrice(5000000); // Reset ceiling to 5M
     setInStockOnly(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 pb-24">
+    <div className="min-h-screen bg-gray-50 p-6 pb-28">
       <div className="mx-auto max-w-7xl space-y-6">
         <header>
           <h1 className="text-3xl font-bold text-gray-900">All Products</h1>
