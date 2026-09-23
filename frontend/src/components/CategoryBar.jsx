@@ -1,16 +1,20 @@
-export default function CategoryBar({ categories, activeCategory, onSelectCategory }) {
+export default function CategoryBar({
+  categories,
+  selectedCategory,
+  onSelectCategory,
+}) {
   return (
-    <div className="flex items-center space-x-2 overflow-x-auto border-b border-gray-200 pb-3 scrollbar-none">
+    <div className="no-scrollbar mb-6 flex space-x-2 overflow-x-auto pb-2">
       {categories.map((cat) => {
-        const isActive = activeCategory === cat;
+        const isSelected = selectedCategory === cat;
         return (
           <button
             key={cat}
             onClick={() => onSelectCategory(cat)}
-            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all ${
-              isActive
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+            className={`rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all focus:outline-none ${
+              isSelected
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                : "border border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700"
             }`}
           >
             {cat}
