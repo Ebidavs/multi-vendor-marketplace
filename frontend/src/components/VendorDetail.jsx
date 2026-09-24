@@ -1,7 +1,8 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import ProductCard from "./ProductCard";
 
 export default function VendorDetail({ vendors = [], products = [], onAddToCart }) {
+  const navigate = useNavigate();
   const { id } = useParams();
   const normalizedId = decodeURIComponent(id || "").trim().toLowerCase();
 
@@ -41,6 +42,24 @@ export default function VendorDetail({ vendors = [], products = [], onAddToCart 
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-6 inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-emerald-700"
+      >
+        <svg
+          aria-hidden="true"
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Back to Marketplace</span>
+      </button>
+
       <section className="mb-10 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="border-b border-gray-100 bg-gray-900 px-6 py-8 text-white sm:px-8">
           <span className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
