@@ -47,11 +47,11 @@ export default function ProductCard({ product, onAddToCart }) {
         </Link>
       </div>
 
-      {/* Price & Add to Cart */}
-      <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-        <div>
-          <span className="text-[10px] font-medium text-gray-400">Price</span>
-          <p className="text-base font-bold text-gray-900">
+      {/* Price & Add to Cart Container */}
+      <div className="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+        <div className="min-w-0 flex-1">
+          <span className="block text-[10px] font-medium text-gray-400">Price</span>
+          <p className="truncate text-sm font-bold text-gray-900 sm:text-base">
             ₦{(price || 0).toLocaleString()}
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function ProductCard({ product, onAddToCart }) {
         <button
           disabled={!inStock}
           onClick={() => onAddToCart(product)}
-          className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-all focus:outline-none focus:ring-2 active:scale-95 ${
+          className={`shrink-0 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 active:scale-95 ${
             inStock
               ? "bg-gray-900 text-white hover:bg-emerald-600 focus:ring-emerald-400 shadow-sm"
               : "cursor-not-allowed bg-gray-100 text-gray-400"
