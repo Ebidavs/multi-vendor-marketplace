@@ -66,20 +66,20 @@ export const dummyProducts = [
     vendorName: 'ConnectMore',
     rating: 4.6,
     reviewsCount: 84,
-    image: 'https://images.unsplash.com/photo-1544652478-6653e09f18a2?auto=format&fit=crop&w=600&q=80',
+    image: 'https://plus.unsplash.com/premium_photo-1761043248662-42f371ad31b4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8VVNCLUMlMjBEZXNrdG9wJTIwRG9ja2luZyUyMFN0YXRpb258ZW58MHx8MHx8fDA%3D',
     inStock: true,
   },
 
   // --- 2. Beauty & Health (5 items) ---
   {
     id: 6,
-    title: 'Skincare Essentials Set',
+    title: 'Nivea Body Lotion',
     category: 'Beauty & Health',
     price: 32000,
     vendorName: 'BeautyPlus',
     rating: 4.8,
     reviewsCount: 142,
-    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1632221522866-bf40bad1db53?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Tml2ZWElMjBCb2R5JTIwTG90aW9ufGVufDB8fDB8fHww',
     inStock: true,
   },
   {
@@ -261,7 +261,7 @@ export const dummyProducts = [
     vendorName: 'ErgoWorkspace',
     rating: 4.8,
     reviewsCount: 165,
-    image: 'https://images.unsplash.com/photo-1580481072645-022f9a6d8310?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1688578735352-9a6f2ac3b70a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8TWVzaCUyMEVyZ29ub21pYyUyME9mZmljZSUyMENoYWlyfGVufDB8fDB8fHww',
     inStock: true,
   },
   {
@@ -318,7 +318,7 @@ export const dummyProducts = [
     vendorName: 'AudioPro',
     rating: 4.8,
     reviewsCount: 105,
-    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1531651008558-ed1740375b39?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8U3R1ZGlvJTIwQ29uZGVuc2VyJTIwTWljcm9waG9uZXxlbnwwfHwwfHx8MA%3D%3D',
     inStock: true,
   },
   {
