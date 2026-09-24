@@ -5,6 +5,9 @@ import ReviewList from './ReviewList';
 export default function ProductDetail({ products = [], onAddToCart }) {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState('description');
 
   if (!id || Number.isNaN(Number(id))) {
     return (
@@ -24,10 +27,6 @@ export default function ProductDetail({ products = [], onAddToCart }) {
   }
 
   const product = products.find((p) => String(p.id) === String(id));
-
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState('description');
 
   if (!product) {
     return (

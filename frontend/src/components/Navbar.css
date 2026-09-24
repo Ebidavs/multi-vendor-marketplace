@@ -1,0 +1,42 @@
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 40px;
+    background-color:purple;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.navbar-logo {
+    font-size:24px;
+    font-weight: 700;
+    color:#ffffff;
+}
+
+.navbar-links {
+    display: flex;
+    gap: 24px;
+}
+
+.navbar-links a{
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.navbar-links a:hover {
+    color: #16a34a;
+}
+
+.cart-button {
+    padding: 10px 18px;
+    border:none;
+    border-radius: 6px;
+    background-color:#16a34a ;
+    color: white;
+    cursor: pointer;
+}
+
+.cart-button:hover {
+    background-color: #16a34a;
+}
