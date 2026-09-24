@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 
 export default function ProductCard({ product, onAddToCart }) {
-  const { id, title, price, image, category, inStock } = product;
+  const { id, title, price, image, category, vendorId, vendorName, inStock } = product;
   const displayTitle = title || "Product";
+  const displayVendor = vendorName || "Verified Vendor";
+  const vendorPath = vendorId || vendorName;
 
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl">
@@ -28,6 +30,15 @@ export default function ProductCard({ product, onAddToCart }) {
         {/* Category & Clickable Title -> Product Detail Page */}
         <p className="text-xs font-medium uppercase tracking-wider text-emerald-600">
           {category}
+        </p>
+        <p className="mt-2 text-xs text-gray-500">
+          Sold by{" "}
+          <Link
+            to={`/vendors/${vendorPath}`}
+            className="font-semibold text-gray-700 hover:text-emerald-600 hover:underline"
+          >
+            {displayVendor}
+          </Link>
         </p>
         <Link to={`/products/${id}`} className="block">
           <h3 className="mt-1 text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-emerald-700">

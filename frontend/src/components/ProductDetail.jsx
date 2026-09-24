@@ -47,6 +47,7 @@ export default function ProductDetail({ products = [], onAddToCart }) {
 
   const productTitle = product.title || 'Product';
   const productVendor = product.vendorName || 'Verified Vendor';
+  const vendorPath = product.vendorId || product.vendorName;
   const images = Array.isArray(product.images)
     ? product.images
     : [product.image || 'https://via.placeholder.com/600x600'];
@@ -130,7 +131,7 @@ export default function ProductDetail({ products = [], onAddToCart }) {
               </span>
 
               <Link
-                to={`/vendors/${product.vendorId || product.vendorName?.toLowerCase().replace(/\s+/g, '') || 'techhub'}`}
+                to={`/vendors/${vendorPath}`}
                 className="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
               >
                 <span>Sold by {productVendor}</span>
