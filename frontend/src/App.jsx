@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 
 // Components
@@ -9,109 +9,43 @@ import ProductGrid from "./components/ProductGrid";
 import CartBar from "./components/CartBar";
 import ProductDetail from "./components/ProductDetail";
 
-// Data
+// Custom Hooks
+import { useCart } from "./hooks/useCart";
+import { useProductFilters } from "./hooks/useProductFilters";
+
+// Data & Constants
 import { categoriesList, dummyProducts } from "./data/productsData";
-import {
-  ALL_CATEGORY,
-  CART_STORAGE_KEY,
-  DEFAULT_MAX_PRICE,
-  DEFAULT_MIN_PRICE,
-  DEFAULT_SORT,
-  SORT_OPTIONS,
-} from "./utils/constants";
 
 export default function App() {
-  // State variables
   const [products] = useState(dummyProducts);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
-  const [minPrice, setMinPrice] = useState(DEFAULT_MIN_PRICE);
-  const [maxPrice, setMaxPrice] = useState(DEFAULT_MAX_PRICE);
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortBy, setSortBy] = useState(DEFAULT_SORT);
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      return savedCart ? JSON.parse(savedCart) : [];
-    } catch {
-      return [];
-    }
-  });
 
-  useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
-  }, [cartItems]);
+  // Extract Cart State & Actions from Custom Hook
+  const {
+    cartItems,
+    handleAddToCart,
+    handleIncreaseQuantity,
+    handleDecreaseQuantity,
+    handleRemoveItem,
+    handleClearCart,
+  } = useCart();
 
-  // Filter and Search logic
-  const filteredProducts = products
-    .filter((product) => {
-      const titleMatch = (product.title || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesCategory =
-        selectedCategory === ALL_CATEGORY || product.category === selectedCategory;
-      const matchesPrice =
-        product.price >= minPrice && product.price <= maxPrice;
-      const matchesStock = inStockOnly ? product.inStock : true;
-
-      return titleMatch && matchesCategory && matchesPrice && matchesStock;
-    })
-    .sort((a, b) => {
-      if (sortBy === SORT_OPTIONS.PRICE_LOW) return a.price - b.price;
-      if (sortBy === SORT_OPTIONS.PRICE_HIGH) return b.price - a.price;
-      if (sortBy === SORT_OPTIONS.NAME) return a.title.localeCompare(b.title);
-      return 0;
-    });
-
-  // Cart Handler Actions
-  const handleAddToCart = (product, quantityToAdd = 1) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantityToAdd }
-            : item
-        );
-      }
-      return [...prevItems, { ...product, quantity: quantityToAdd }];
-    });
-  };
-
-  const handleClearCart = () => setCartItems([]);
-
-  const handleIncreaseQuantity = (productId) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    );
-  };
-
-  const handleDecreaseQuantity = (productId) => {
-    setCartItems((prevItems) =>
-      prevItems
-        .map((item) =>
-          item.id === productId ? { ...item, quantity: item.quantity - 1 } : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  const handleRemoveItem = (productId) => {
-    setCartItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
-    );
-  };
-
-  const handleResetFilters = () => {
-    setSearchQuery("");
-    setSelectedCategory(ALL_CATEGORY);
-    setMinPrice(DEFAULT_MIN_PRICE);
-    setMaxPrice(DEFAULT_MAX_PRICE);
-    setInStockOnly(false);
-    setSortBy(DEFAULT_SORT);
-  };
+  // Extract Filter State & Actions from Custom Hook
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedCategory,
+    setSelectedCategory,
+    minPrice,
+    setMinPrice,
+    maxPrice,
+    setMaxPrice,
+    inStockOnly,
+    setInStockOnly,
+    sortBy,
+    setSortBy,
+    filteredProducts,
+    handleResetFilters,
+  } = useProductFilters(products);
 
   return (
     <BrowserRouter>
@@ -130,10 +64,8 @@ export default function App() {
 
         {/* Dynamic Routes */}
         <Routes>
-          {/* Redirect / to /products */}
           <Route path="/" element={<Navigate to="/products" replace />} />
 
-          {/* Main Product Listing */}
           <Route
             path="/products"
             element={
@@ -173,7 +105,6 @@ export default function App() {
             }
           />
 
-          {/* Product Detail Route */}
           <Route
             path="/products/:id"
             element={
@@ -187,23 +118,16 @@ export default function App() {
           <Route
             path="*"
             element={
-              <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
-                  404 Error
-                </p>
-                <h1 className="mt-4 text-4xl font-black text-gray-900">
-                  Page Not Found
-                </h1>
-                <p className="mt-3 text-sm text-gray-600">
-                  The page you are looking for does not exist or has moved.
-                </p>
+              <main className="mx-auto max-w-7xl px-4 py-16 text-center">
+                <h1 className="text-4xl font-extrabold text-gray-900">404</h1>
+                <p className="mt-2 text-gray-600">Page Not Found</p>
                 <Link
                   to="/products"
-                  className="mt-6 inline-block rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                  className="mt-6 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
                 >
                   Back to Marketplace
                 </Link>
-              </div>
+              </main>
             }
           />
         </Routes>
