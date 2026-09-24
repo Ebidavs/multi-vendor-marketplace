@@ -70,7 +70,7 @@ export default function App() {
       <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <h1 className="text-xl font-extrabold tracking-tight text-gray-900">
-            Storefront <span className="text-emerald-600">Discovery</span>
+            multi-vendor <span className="text-emerald-600">marketplace</span>
           </h1>
         </div>
       </header>
