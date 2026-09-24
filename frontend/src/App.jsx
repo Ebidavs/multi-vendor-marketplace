@@ -11,19 +11,27 @@ import ProductDetail from "./components/ProductDetail";
 
 // Data
 import { categoriesList, dummyProducts } from "./data/productsData";
+import {
+  ALL_CATEGORY,
+  CART_STORAGE_KEY,
+  DEFAULT_MAX_PRICE,
+  DEFAULT_MIN_PRICE,
+  DEFAULT_SORT,
+  SORT_OPTIONS,
+} from "./utils/constants";
 
 export default function App() {
   // State variables
   const [products] = useState(dummyProducts);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(5000000);
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
+  const [minPrice, setMinPrice] = useState(DEFAULT_MIN_PRICE);
+  const [maxPrice, setMaxPrice] = useState(DEFAULT_MAX_PRICE);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortBy, setSortBy] = useState("default");
+  const [sortBy, setSortBy] = useState(DEFAULT_SORT);
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const savedCart = localStorage.getItem("cartItems");
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
       return savedCart ? JSON.parse(savedCart) : [];
     } catch {
       return [];
@@ -31,7 +39,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
   }, [cartItems]);
 
   // Filter and Search logic
@@ -41,7 +49,7 @@ export default function App() {
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
       const matchesCategory =
-        selectedCategory === "All" || product.category === selectedCategory;
+        selectedCategory === ALL_CATEGORY || product.category === selectedCategory;
       const matchesPrice =
         product.price >= minPrice && product.price <= maxPrice;
       const matchesStock = inStockOnly ? product.inStock : true;
@@ -49,9 +57,9 @@ export default function App() {
       return titleMatch && matchesCategory && matchesPrice && matchesStock;
     })
     .sort((a, b) => {
-      if (sortBy === "price-low") return a.price - b.price;
-      if (sortBy === "price-high") return b.price - a.price;
-      if (sortBy === "name") return a.title.localeCompare(b.title);
+      if (sortBy === SORT_OPTIONS.PRICE_LOW) return a.price - b.price;
+      if (sortBy === SORT_OPTIONS.PRICE_HIGH) return b.price - a.price;
+      if (sortBy === SORT_OPTIONS.NAME) return a.title.localeCompare(b.title);
       return 0;
     });
 
@@ -98,11 +106,11 @@ export default function App() {
 
   const handleResetFilters = () => {
     setSearchQuery("");
-    setSelectedCategory("All");
-    setMinPrice(0);
-    setMaxPrice(5000000);
+    setSelectedCategory(ALL_CATEGORY);
+    setMinPrice(DEFAULT_MIN_PRICE);
+    setMaxPrice(DEFAULT_MAX_PRICE);
     setInStockOnly(false);
-    setSortBy("default");
+    setSortBy(DEFAULT_SORT);
   };
 
   return (
@@ -173,6 +181,29 @@ export default function App() {
                 products={products}
                 onAddToCart={handleAddToCart}
               />
+            }
+          />
+
+          <Route
+            path="*"
+            element={
+              <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
+                  404 Error
+                </p>
+                <h1 className="mt-4 text-4xl font-black text-gray-900">
+                  Page Not Found
+                </h1>
+                <p className="mt-3 text-sm text-gray-600">
+                  The page you are looking for does not exist or has moved.
+                </p>
+                <Link
+                  to="/products"
+                  className="mt-6 inline-block rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                >
+                  Back to Marketplace
+                </Link>
+              </div>
             }
           />
         </Routes>

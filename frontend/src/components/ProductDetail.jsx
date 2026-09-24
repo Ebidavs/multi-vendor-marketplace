@@ -4,6 +4,24 @@ import ReviewList from './ReviewList';
 
 export default function ProductDetail({ products = [], onAddToCart }) {
   const { id } = useParams();
+
+  if (!id || Number.isNaN(Number(id))) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-16 text-center">
+        <h2 className="text-xl font-bold text-gray-800">Invalid Product ID</h2>
+        <p className="mt-2 text-xs text-gray-500">
+          The product link is missing or invalid.
+        </p>
+        <Link
+          to="/products"
+          className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
+        >
+          Back to Marketplace
+        </Link>
+      </div>
+    );
+  }
+
   const product = products.find((p) => String(p.id) === String(id));
 
   const [selectedImage, setSelectedImage] = useState(0);
