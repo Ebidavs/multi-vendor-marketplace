@@ -130,7 +130,7 @@ export default function ProductDetail({ products = [], onAddToCart }) {
               </span>
 
               <Link
-                to={`/vendor/${product.vendorId || encodeURIComponent(productVendor)}`}
+                to={`/vendors/${product.vendorId || product.vendorName?.toLowerCase().replace(/\s+/g, '') || 'techhub'}`}
                 className="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
               >
                 <span>Sold by {productVendor}</span>

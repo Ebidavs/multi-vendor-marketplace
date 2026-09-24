@@ -10,7 +10,7 @@ export const categoriesList = [
   'Books & Media',
   'Accessories',
   'Wearables',
-].map(normalizeProduct);
+];
 
 const normalizeProduct = (product) => ({
   ...product,
@@ -18,6 +18,27 @@ const normalizeProduct = (product) => ({
   vendorName: product.vendorName || product.vendor || 'Verified Vendor',
   image: product.image || product.images?.[0] || '',
 });
+
+export const dummyVendors = [
+  {
+    id: 'techhub',
+    name: 'TechHub',
+    description: 'Fast-growing electronics seller focused on practical everyday tech.',
+    location: 'Lagos, Nigeria',
+    rating: 4.9,
+    deliveryTime: '2-4 days',
+    tagline: 'Smart gadgets for modern living',
+  },
+  {
+    id: 'stylehouse',
+    name: 'StyleHouse',
+    description: 'Curated home and lifestyle essentials with a premium everyday feel.',
+    location: 'Abuja, Nigeria',
+    rating: 4.8,
+    deliveryTime: '3-5 days',
+    tagline: 'Style, comfort, and function in one place',
+  },
+];
 
 export const dummyProducts = [
   // --- 1. Electronics (5 items) ---
@@ -590,3 +611,4 @@ export const dummyProducts = [
     inStock: true,
   },
 ];
+

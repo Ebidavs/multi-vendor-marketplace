@@ -8,13 +8,14 @@ import FilterSidebar from "./components/FilterSidebar";
 import ProductGrid from "./components/ProductGrid";
 import CartBar from "./components/CartBar";
 import ProductDetail from "./components/ProductDetail";
+import VendorDetail from "./components/VendorDetail";
 
 // Custom Hooks
 import { useCart } from "./hooks/useCart";
 import { useProductFilters } from "./hooks/useProductFilters";
 
 // Data & Constants
-import { categoriesList, dummyProducts } from "./data/productsData";
+import { categoriesList, dummyProducts, dummyVendors } from "./data/productsData";
 
 export default function App() {
   const [products] = useState(dummyProducts);
@@ -109,6 +110,17 @@ export default function App() {
             path="/products/:id"
             element={
               <ProductDetail
+                products={products}
+                onAddToCart={handleAddToCart}
+              />
+            }
+          />
+
+          <Route
+            path="/vendors/:id"
+            element={
+              <VendorDetail
+                vendors={dummyVendors}
                 products={products}
                 onAddToCart={handleAddToCart}
               />
