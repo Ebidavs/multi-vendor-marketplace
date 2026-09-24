@@ -10,12 +10,30 @@ export default function FilterSidebar({
   const MAX_LIMIT = 5000000;
 
   const handleMinChange = (val) => {
+    // If input is cleared, pass 0 (or fallback)
+    if (val === '') {
+      onMinPriceChange(0);
+      return;
+    }
+
     const num = Number(val);
+    // Guard against NaN values
+    if (isNaN(num)) return;
+
     onMinPriceChange(num > maxPrice ? maxPrice : Math.max(0, num));
   };
 
   const handleMaxChange = (val) => {
+    // If input is cleared, pass fallback maximum limit
+    if (val === '') {
+      onMaxPriceChange(MAX_LIMIT);
+      return;
+    }
+
     const num = Number(val);
+    // Guard against NaN values
+    if (isNaN(num)) return;
+
     onMaxPriceChange(num < minPrice ? minPrice : Math.min(MAX_LIMIT, num));
   };
 
@@ -74,14 +92,16 @@ export default function FilterSidebar({
           <div>
             <div className="mb-1 flex justify-between text-[11px] font-medium text-gray-500">
               <span>Min Slider</span>
-              <span className="font-semibold text-gray-700">₦{minPrice.toLocaleString()}</span>
+              <span className="font-semibold text-gray-700">
+                ₦{(minPrice || 0).toLocaleString()}
+              </span>
             </div>
             <input
               type="range"
               min="0"
               max={maxPrice}
               step="10000"
-              value={minPrice}
+              value={minPrice || 0}
               onChange={(e) => handleMinChange(e.target.value)}
               className="w-full cursor-pointer accent-emerald-600"
             />
@@ -90,14 +110,16 @@ export default function FilterSidebar({
           <div>
             <div className="mb-1 flex justify-between text-[11px] font-medium text-gray-500">
               <span>Max Slider</span>
-              <span className="font-semibold text-gray-700">₦{maxPrice.toLocaleString()}</span>
+              <span className="font-semibold text-gray-700">
+                ₦{(maxPrice || 0).toLocaleString()}
+              </span>
             </div>
             <input
               type="range"
               min={minPrice}
               max={MAX_LIMIT}
               step="10000"
-              value={maxPrice}
+              value={maxPrice || MAX_LIMIT}
               onChange={(e) => handleMaxChange(e.target.value)}
               className="w-full cursor-pointer accent-emerald-600"
             />

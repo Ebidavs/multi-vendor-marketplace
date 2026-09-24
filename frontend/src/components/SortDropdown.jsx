@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export function SortDropdown({ sortBy, onSortChange }) {
   const [isOpen, setIsOpen] = useState(false);

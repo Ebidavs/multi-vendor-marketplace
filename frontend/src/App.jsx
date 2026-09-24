@@ -4,7 +4,6 @@ import CategoryBar from "./components/CategoryBar";
 import FilterSidebar from "./components/FilterSidebar";
 import ProductGrid from "./components/ProductGrid";
 import CartBar from "./components/CartBar";
-import { SortDropdown } from './components/SortDropdown';
 import { categoriesList, dummyProducts } from "./data/productsData";
 
 export default function App() {
