@@ -4,56 +4,11 @@ import CategoryBar from "./components/CategoryBar";
 import FilterSidebar from "./components/FilterSidebar";
 import ProductGrid from "./components/ProductGrid";
 import CartBar from "./components/CartBar";
-
-// Sample product mock data
-const INITIAL_PRODUCTS = [
-  {
-    id: 1,
-    title: "Wireless Noise-Canceling Headphones",
-    price: 150000,
-    category: "Electronics",
-    inStock: true,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    id: 2,
-    title: "Ergonomic Mechanical Keyboard",
-    price: 85000,
-    category: "Electronics",
-    inStock: true,
-    image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    id: 3,
-    title: "Minimalist Leather Backpack",
-    price: 45000,
-    category: "Fashion",
-    inStock: false,
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    id: 4,
-    title: "Ultra-Wide Gaming Monitor 34\"",
-    price: 420000,
-    category: "Electronics",
-    inStock: true,
-    image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    id: 5,
-    title: "Smart Fitness Watch Series 5",
-    price: 120000,
-    category: "Gadgets",
-    inStock: true,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60",
-  },
-];
-
-const CATEGORIES = ["All", "Electronics", "Fashion", "Gadgets"];
+import { categoriesList, dummyProducts } from "./data/productsData";
 
 export default function App() {
   // State variables
-  const [products] = useState(INITIAL_PRODUCTS);
+  const [products] = useState(dummyProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [minPrice, setMinPrice] = useState(0);
@@ -130,7 +85,7 @@ export default function App() {
         />
 
         <CategoryBar
-          categories={CATEGORIES}
+          categories={categoriesList}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />

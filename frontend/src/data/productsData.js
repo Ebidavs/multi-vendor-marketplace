@@ -12,7 +12,7 @@ export const categoriesList = [
   'Wearables',
 ];
 
-export const PRODUCTS = [
+export const dummyProducts = [
   // --- 1. Electronics (5 items) ---
   {
     id: 1,
