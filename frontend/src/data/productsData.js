@@ -12,35 +12,22 @@ export const categoriesList = [
   'Wearables',
 ];
 
+const slugify = (value) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
 const normalizeProduct = (product) => ({
   ...product,
   title: product.title || product.name || 'Unnamed Product',
   vendorName: product.vendorName || product.vendor || 'Verified Vendor',
+  vendorId: product.vendorId || slugify(product.vendorName || product.vendor || 'Verified Vendor'),
   image: product.image || product.images?.[0] || '',
 });
 
-export const dummyVendors = [
-  {
-    id: 'techhub',
-    name: 'TechHub',
-    description: 'Fast-growing electronics seller focused on practical everyday tech.',
-    location: 'Lagos, Nigeria',
-    rating: 4.9,
-    deliveryTime: '2-4 days',
-    tagline: 'Smart gadgets for modern living',
-  },
-  {
-    id: 'stylehouse',
-    name: 'StyleHouse',
-    description: 'Curated home and lifestyle essentials with a premium everyday feel.',
-    location: 'Abuja, Nigeria',
-    rating: 4.8,
-    deliveryTime: '3-5 days',
-    tagline: 'Style, comfort, and function in one place',
-  },
-];
-
-export const dummyProducts = [
+const productSeed = [
   // --- 1. Electronics (5 items) ---
   {
     id: 1,
@@ -611,4 +598,20 @@ export const dummyProducts = [
     inStock: true,
   },
 ];
+
+export const dummyProducts = productSeed.map(normalizeProduct);
+
+export const dummyVendors = [
+  ...new Map(
+    dummyProducts.map((product) => [product.vendorId, product.vendorName])
+  ),
+].map(([id, name]) => ({
+  id,
+  name,
+  description: `Trusted ${name} seller offering quality products for everyday needs.`,
+  rating: 4.7,
+  location: 'Lagos, Nigeria',
+  responseRate: '98%',
+  joinedDate: 'January 2024',
+}));
 

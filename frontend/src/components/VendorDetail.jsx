@@ -3,11 +3,12 @@ import ProductCard from "./ProductCard";
 
 export default function VendorDetail({ vendors = [], products = [], onAddToCart }) {
   const { id } = useParams();
+  const normalizedId = decodeURIComponent(id || "").trim().toLowerCase();
 
   const vendor = vendors.find(
     (v) =>
-      v.id?.toLowerCase() === id?.toLowerCase() ||
-      v.name?.toLowerCase() === id?.toLowerCase()
+      v.id?.trim().toLowerCase() === normalizedId ||
+      v.name?.trim().toLowerCase() === normalizedId
   );
 
   if (!vendor) {
