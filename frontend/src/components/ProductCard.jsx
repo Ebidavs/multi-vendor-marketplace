@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 
 export default function ProductCard({ product, onAddToCart }) {
-  const { id, title, name, price, image, category, inStock } = product;
-  const displayTitle = title || name || "Product";
+  const { id, title, price, image, category, inStock } = product;
+  const displayTitle = title || "Product";
 
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl">

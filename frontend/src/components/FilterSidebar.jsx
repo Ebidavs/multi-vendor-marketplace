@@ -9,32 +9,25 @@ export default function FilterSidebar({
 }) {
   const MAX_LIMIT = 5000000;
 
+  const sanitizePrice = (value, fallback) => {
+    if (value === '' || value === null || value === undefined) return fallback;
+
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+
+    return Math.max(0, Math.min(num, MAX_LIMIT));
+  };
+
   const handleMinChange = (val) => {
-    // If input is cleared, pass 0 (or fallback)
-    if (val === '') {
-      onMinPriceChange(0);
-      return;
-    }
-
-    const num = Number(val);
-    // Guard against NaN values
-    if (isNaN(num)) return;
-
-    onMinPriceChange(num > maxPrice ? maxPrice : Math.max(0, num));
+    const nextMin = sanitizePrice(val, 0);
+    const safeMin = nextMin > maxPrice ? maxPrice : nextMin;
+    onMinPriceChange(Math.max(0, safeMin));
   };
 
   const handleMaxChange = (val) => {
-    // If input is cleared, pass fallback maximum limit
-    if (val === '') {
-      onMaxPriceChange(MAX_LIMIT);
-      return;
-    }
-
-    const num = Number(val);
-    // Guard against NaN values
-    if (isNaN(num)) return;
-
-    onMaxPriceChange(num < minPrice ? minPrice : Math.min(MAX_LIMIT, num));
+    const nextMax = sanitizePrice(val, MAX_LIMIT);
+    const safeMax = nextMax < minPrice ? minPrice : nextMax;
+    onMaxPriceChange(Math.min(MAX_LIMIT, safeMax));
   };
 
   return (

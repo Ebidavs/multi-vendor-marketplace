@@ -53,7 +53,7 @@ export default function CartBar({
               className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs"
             >
               <span className="max-w-[120px] truncate font-medium text-gray-700">
-                {item.title || item.name}
+                {item.title}
               </span>
 
               <div className="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-1.5 py-0.5">

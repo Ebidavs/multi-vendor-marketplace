@@ -27,8 +27,8 @@ export default function ProductDetail({ products = [], onAddToCart }) {
     );
   }
 
-  const productTitle = product.title || product.name || 'Product';
-  const productVendor = product.vendorName || product.vendor || 'Verified Vendor';
+  const productTitle = product.title || 'Product';
+  const productVendor = product.vendorName || 'Verified Vendor';
   const images = Array.isArray(product.images)
     ? product.images
     : [product.image || 'https://via.placeholder.com/600x600'];

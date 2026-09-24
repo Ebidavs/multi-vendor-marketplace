@@ -10,7 +10,14 @@ export const categoriesList = [
   'Books & Media',
   'Accessories',
   'Wearables',
-];
+].map(normalizeProduct);
+
+const normalizeProduct = (product) => ({
+  ...product,
+  title: product.title || product.name || 'Unnamed Product',
+  vendorName: product.vendorName || product.vendor || 'Verified Vendor',
+  image: product.image || product.images?.[0] || '',
+});
 
 export const dummyProducts = [
   // --- 1. Electronics (5 items) ---

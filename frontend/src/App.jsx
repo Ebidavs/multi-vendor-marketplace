@@ -37,7 +37,7 @@ export default function App() {
   // Filter and Search logic
   const filteredProducts = products
     .filter((product) => {
-      const titleMatch = (product.title || product.name || "")
+      const titleMatch = (product.title || "")
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
       const matchesCategory =
@@ -51,8 +51,7 @@ export default function App() {
     .sort((a, b) => {
       if (sortBy === "price-low") return a.price - b.price;
       if (sortBy === "price-high") return b.price - a.price;
-      if (sortBy === "name")
-        return (a.title || a.name || "").localeCompare(b.title || b.name || "");
+      if (sortBy === "name") return a.title.localeCompare(b.title);
       return 0;
     });
 
