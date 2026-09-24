@@ -1,3 +1,5 @@
+import { SortDropdown } from './SortDropdown';
+
 export default function SearchBar({
   searchQuery,
   onSearchChange,
@@ -45,16 +47,7 @@ export default function SearchBar({
         <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 whitespace-nowrap">
           Sort by:
         </label>
-        <select
-          value={sortBy}
-          onChange={(e) => onSortChange(e.target.value)}
-          className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-xs font-semibold text-gray-700 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"
-        >
-          <option value="default">Featured</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="price-high">Price: High to Low</option>
-          <option value="name">Name (A-Z)</option>
-        </select>
+        <SortDropdown sortBy={sortBy} onSortChange={onSortChange} />
       </div>
     </div>
   );
