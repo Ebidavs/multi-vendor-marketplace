@@ -90,7 +90,7 @@ export const dummyProducts = [
     vendorName: 'GlowOrganics',
     rating: 4.7,
     reviewsCount: 98,
-    image: 'https://images.unsplash.com/photo-1608248597261-833258657b45?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1665763630810-e6251bdd392d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8T3JnYW5pYyUyMEh5ZHJhdGluZyUyMFNlcnVtJTIwNTBtbHxlbnwwfHwwfHx8MA%3D%3D',
     inStock: true,
   },
   {
@@ -226,7 +226,7 @@ export const dummyProducts = [
     vendorName: 'PulseTech',
     rating: 4.5,
     reviewsCount: 156,
-    image: 'https://images.unsplash.com/photo-1622445268465-84381658e441?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1615526675159-e248c3021d3f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8TWFnU2FmZSUyMFdpcmVsZXNzJTIwQ2hhcmdpbmclMjBQYWR8ZW58MHx8MHx8fDA%3D',
     inStock: true,
   },
   {
@@ -397,7 +397,7 @@ export const dummyProducts = [
     vendorName: 'IronGear',
     rating: 4.5,
     reviewsCount: 89,
-    image: 'https://images.unsplash.com/photo-1570700008280-dac238868544?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1594318691026-1420254843ec?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fEluc3VsYXRlZCUyMEd5bSUyMFNoYWtlciUyMEJvdHRsZXxlbnwwfHwwfHx8MA%3D%3D',
     inStock: true,
   },
   {
@@ -522,7 +522,7 @@ export const dummyProducts = [
     vendorName: 'VaultLeather',
     rating: 4.4,
     reviewsCount: 47,
-    image: 'https://images.unsplash.com/photo-1614312693050-164118771163?auto=format&fit=crop&w=600&q=80',
+    image: 'https://media.istockphoto.com/id/450023281/photo/house-keys-with-label.webp?a=1&b=1&s=612x612&w=0&k=20&c=_nVZQxSBUo8jp9GAl3mq3R86H8SAL1pJ2AS9kDMPJD4=',
     inStock: true,
   },
 
