@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 
 // Components
 import SearchBar from "./components/SearchBar";
@@ -7,9 +7,7 @@ import CategoryBar from "./components/CategoryBar";
 import FilterSidebar from "./components/FilterSidebar";
 import ProductGrid from "./components/ProductGrid";
 import CartBar from "./components/CartBar";
-
-// Pages
-import ProductDetailPage from "./pages/ProductDetailPage";
+import ProductDetail from "./components/ProductDetail";
 
 // Data
 import { categoriesList, dummyProducts } from "./data/productsData";
@@ -23,7 +21,18 @@ export default function App() {
   const [maxPrice, setMaxPrice] = useState(5000000);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState("default");
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem("cartItems");
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
 
   // Filter and Search logic
   const filteredProducts = products
@@ -42,11 +51,12 @@ export default function App() {
     .sort((a, b) => {
       if (sortBy === "price-low") return a.price - b.price;
       if (sortBy === "price-high") return b.price - a.price;
-      if (sortBy === "name") return (a.title || a.name || "").localeCompare(b.title || b.name || "");
+      if (sortBy === "name")
+        return (a.title || a.name || "").localeCompare(b.title || b.name || "");
       return 0;
     });
 
-  // Cart Handler Actions (handles optional quantity passed from detail page)
+  // Cart Handler Actions
   const handleAddToCart = (product, quantityToAdd = 1) => {
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
@@ -63,6 +73,30 @@ export default function App() {
 
   const handleClearCart = () => setCartItems([]);
 
+  const handleIncreaseQuantity = (productId) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
+      )
+    );
+  };
+
+  const handleDecreaseQuantity = (productId) => {
+    setCartItems((prevItems) =>
+      prevItems
+        .map((item) =>
+          item.id === productId ? { ...item, quantity: item.quantity - 1 } : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  const handleRemoveItem = (productId) => {
+    setCartItems((prevItems) =>
+      prevItems.filter((item) => item.id !== productId)
+    );
+  };
+
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("All");
@@ -78,15 +112,21 @@ export default function App() {
         {/* Header */}
         <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/80 backdrop-blur-md">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <Link to="/products" className="text-xl font-extrabold tracking-tight text-gray-900">
+            <Link
+              to="/products"
+              className="text-xl font-extrabold tracking-tight text-gray-900"
+            >
               multi-vendor <span className="text-emerald-600">marketplace</span>
             </Link>
           </div>
         </header>
 
-        {/* Dynamic Route Switching */}
+        {/* Dynamic Routes */}
         <Routes>
-          {/* Main Marketplace / Products Listing Route */}
+          {/* Redirect / to /products */}
+          <Route path="/" element={<Navigate to="/products" replace />} />
+
+          {/* Main Product Listing */}
           <Route
             path="/products"
             element={
@@ -104,7 +144,6 @@ export default function App() {
                   onSelectCategory={setSelectedCategory}
                 />
 
-                {/* Sidebar + Product Grid Layout */}
                 <div className="flex flex-col gap-8 md:flex-row">
                   <FilterSidebar
                     minPrice={minPrice}
@@ -127,51 +166,11 @@ export default function App() {
             }
           />
 
-          {/* Root redirect to /products */}
-          <Route
-            path="/"
-            element={
-              <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <SearchBar
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  sortBy={sortBy}
-                  onSortChange={setSortBy}
-                />
-
-                <CategoryBar
-                  categories={categoriesList}
-                  selectedCategory={selectedCategory}
-                  onSelectCategory={setSelectedCategory}
-                />
-
-                <div className="flex flex-col gap-8 md:flex-row">
-                  <FilterSidebar
-                    minPrice={minPrice}
-                    onMinPriceChange={setMinPrice}
-                    maxPrice={maxPrice}
-                    onMaxPriceChange={setMaxPrice}
-                    inStockOnly={inStockOnly}
-                    onInStockChange={setInStockOnly}
-                    onResetFilters={handleResetFilters}
-                  />
-
-                  <div className="flex-1">
-                    <ProductGrid
-                      products={filteredProducts}
-                      onAddToCart={handleAddToCart}
-                    />
-                  </div>
-                </div>
-              </main>
-            }
-          />
-
-          {/* Product Detail Page Route */}
+          {/* Product Detail Route */}
           <Route
             path="/products/:id"
             element={
-              <ProductDetailPage
+              <ProductDetail
                 products={products}
                 onAddToCart={handleAddToCart}
               />
@@ -179,8 +178,14 @@ export default function App() {
           />
         </Routes>
 
-        {/* Persistent Floating Bottom Cart Bar */}
-        <CartBar cartItems={cartItems} onClearCart={handleClearCart} />
+        {/* Floating Bottom Cart Bar */}
+        <CartBar
+          cartItems={cartItems}
+          onClearCart={handleClearCart}
+          onIncreaseQuantity={handleIncreaseQuantity}
+          onDecreaseQuantity={handleDecreaseQuantity}
+          onRemoveItem={handleRemoveItem}
+        />
       </div>
     </BrowserRouter>
   );
