@@ -119,5 +119,44 @@ color: #777;
 }
 .category-card {
     padding: 30px;
-    border-radius: 16px
+    border-radius: 16px;
+    background: white;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+    transition: 0.3s;
+
+}
+.category-card:hover {
+    transform: translateY(-5px);
+}
+.category-icon {
+    font-size: 45px;
+    margin-bottom: 15px;
+
+}
+.category-card h3 {
+    margin:  0 0 8px;
+}
+.category-card p {
+    margin: 0;
+    color: #777;
+}
+/* MOBILE */
+.hero-content h1 {
+    @media  (max-width: 768px ){
+        .home-hero {
+            padding: 50px 6%;
+
+        }
+        .hero-content h1 {
+            font-size: 42px;
+        }
+        .trust-section,
+        .category-grid {
+            grid-template-columns: 1 fr;
+        }
+        .home-section {
+            padding: 50px 6%;
+        }
+    }
 }
