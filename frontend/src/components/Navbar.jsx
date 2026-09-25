@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-export default function Navbar() {
+export default function Navbar({ cartCount = 0, onCartClick }) {
   return (
     <header className="bg-emerald-600 text-white shadow-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
@@ -32,6 +32,7 @@ export default function Navbar() {
           {/* SVG Cart Button */}
           <Link
             to="/cart"
+            onClick={onCartClick}
             aria-label="Shopping Cart"
             className="relative flex items-center justify-center rounded-lg bg-emerald-700 p-2.5 text-white transition-all hover:bg-emerald-800"
           >
@@ -54,6 +55,11 @@ export default function Navbar() {
                 d="M16.5 20.25a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM9 20.25a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"
               />
             </svg>
+            {cartCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1 text-[11px] font-bold text-white ring-2 ring-emerald-700">
+                {cartCount > 10 ? "10+" : cartCount}
+              </span>
+            )}
           </Link>
         </div>
       </div>

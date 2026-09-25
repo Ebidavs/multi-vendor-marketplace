@@ -1,10 +1,17 @@
 import { Link } from "react-router-dom";
 
-export default function ProductCard({ product, onAddToCart }) {
+export default function ProductCard({
+  product,
+  cartItems = [],
+  onAddToCart,
+  onIncreaseQuantity,
+  onDecreaseQuantity,
+}) {
   const { id, title, price, image, category, vendorId, vendorName, inStock } = product;
   const displayTitle = title || "Product";
   const displayVendor = vendorName || "Verified Vendor";
   const vendorPath = vendorId || vendorName;
+  const cartItem = cartItems.find((item) => item.id === id);
 
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/70 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl">
@@ -56,17 +63,44 @@ export default function ProductCard({ product, onAddToCart }) {
           </p>
         </div>
 
-        <button
-          disabled={!inStock}
-          onClick={() => onAddToCart(product)}
-          className={`shrink-0 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all focus:outline-none focus:ring-2 active:scale-95 ${
-            inStock
-              ? "bg-gray-900 text-white hover:bg-emerald-600 focus:ring-emerald-400 shadow-sm"
-              : "cursor-not-allowed bg-gray-100 text-gray-400"
-          }`}
-        >
-          {inStock ? "Add to Cart" : "Unavailable"}
-        </button>
+        {!inStock ? (
+          <button
+            disabled
+            className="shrink-0 cursor-not-allowed whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-semibold text-gray-400"
+          >
+            Unavailable
+          </button>
+        ) : cartItem ? (
+          <div className="flex shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-1.5 py-1">
+            <button
+              type="button"
+              onClick={() => onDecreaseQuantity(cartItem.id)}
+              className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-600 text-lg font-bold leading-none text-white transition hover:bg-emerald-700"
+              aria-label={`Decrease ${displayTitle} quantity`}
+            >
+              -
+            </button>
+            <span className="min-w-5 text-center text-sm font-bold text-gray-800">
+              {cartItem.quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() => onIncreaseQuantity(cartItem.id)}
+              className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-600 text-lg font-bold leading-none text-white transition hover:bg-emerald-700"
+              aria-label={`Increase ${displayTitle} quantity`}
+            >
+              +
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onAddToCart(product)}
+            className="shrink-0 whitespace-nowrap rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 active:scale-95"
+          >
+            Add to Cart
+          </button>
+        )}
       </div>
     </div>
   );

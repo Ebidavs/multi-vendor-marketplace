@@ -14,7 +14,7 @@ export default function CartBar({
   if (totalCount === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/80 bg-white/90 p-4 shadow-2xl backdrop-blur-md transition-all duration-300 ease-in-out">
+    <div id="cart" className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200/80 bg-white/90 p-4 shadow-2xl backdrop-blur-md transition-all duration-300 ease-in-out">
       <div className="mx-auto flex max-w-7xl flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
           {/* Cart Counter & Total */}
@@ -60,7 +60,7 @@ export default function CartBar({
                 <button
                   type="button"
                   onClick={() => onDecreaseQuantity(item.id)}
-                  className="px-1.5 font-bold text-gray-600 hover:text-gray-900"
+                  className="px-1.5 font-bold text-emerald-600 hover:text-emerald-700"
                 >
                   -
                 </button>
@@ -70,7 +70,7 @@ export default function CartBar({
                 <button
                   type="button"
                   onClick={() => onIncreaseQuantity(item.id)}
-                  className="px-1.5 font-bold text-gray-600 hover:text-gray-900"
+                  className="px-1.5 font-bold text-emerald-600 hover:text-emerald-700"
                 >
                   +
                 </button>

@@ -1,6 +1,12 @@
 import ProductCard from "./ProductCard";
 
-export default function ProductGrid({ products, onAddToCart }) {
+export default function ProductGrid({
+  products,
+  cartItems,
+  onAddToCart,
+  onIncreaseQuantity,
+  onDecreaseQuantity,
+}) {
   if (!products || products.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center shadow-sm">
@@ -23,7 +29,10 @@ export default function ProductGrid({ products, onAddToCart }) {
         <ProductCard
           key={product.id}
           product={product}
+          cartItems={cartItems}
           onAddToCart={onAddToCart}
+          onIncreaseQuantity={onIncreaseQuantity}
+          onDecreaseQuantity={onDecreaseQuantity}
         />
       ))}
     </div>

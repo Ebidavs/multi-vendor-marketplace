@@ -18,6 +18,7 @@ import { categoriesList, dummyProducts, dummyVendors } from "./data/productsData
 
 export default function App() {
   const [products] = useState(dummyProducts);
+  const [cartViewed, setCartViewed] = useState(false);
 
   const {
     cartItems,
@@ -27,6 +28,11 @@ export default function App() {
     handleRemoveItem,
     handleClearCart,
   } = useCart();
+
+  const addToCart = (...args) => {
+    setCartViewed(false);
+    handleAddToCart(...args);
+  };
 
   const {
     searchQuery,
@@ -78,7 +84,13 @@ export default function App() {
           onResetFilters={handleResetFilters}
         />
         <div className="flex-1">
-          <ProductGrid products={filteredProducts} onAddToCart={handleAddToCart} />
+          <ProductGrid
+            products={filteredProducts}
+            cartItems={cartItems}
+            onAddToCart={addToCart}
+            onIncreaseQuantity={handleIncreaseQuantity}
+            onDecreaseQuantity={handleDecreaseQuantity}
+          />
         </div>
       </div>
 
@@ -96,7 +108,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Persistent Navbar across all routes */}
-      <Navbar />
+      <Navbar
+        cartCount={cartViewed ? 0 : cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+        onCartClick={() => setCartViewed(true)}
+      />
 
       {/* Routes setup */}
       <Routes>
@@ -104,12 +119,27 @@ export default function App() {
         <Route path="/products" element={marketplacePage} />
         <Route path="/marketplace" element={marketplacePage} />
         <Route
+          path="/cart"
+          element={
+            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+              <h1 className="mb-6 text-2xl font-bold text-gray-900">Your Cart</h1>
+              <CartBar
+                cartItems={cartItems}
+                onClearCart={handleClearCart}
+                onIncreaseQuantity={handleIncreaseQuantity}
+                onDecreaseQuantity={handleDecreaseQuantity}
+                onRemoveItem={handleRemoveItem}
+              />
+            </main>
+          }
+        />
+        <Route
           path="/products/:id"
           element={
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
               <ProductDetail
                 products={products}
-                onAddToCart={handleAddToCart}
+                onAddToCart={addToCart}
               />
             </main>
           }
@@ -121,7 +151,10 @@ export default function App() {
               <VendorDetail
                 vendors={dummyVendors}
                 products={products}
-                onAddToCart={handleAddToCart}
+                cartItems={cartItems}
+                onAddToCart={addToCart}
+                onIncreaseQuantity={handleIncreaseQuantity}
+                onDecreaseQuantity={handleDecreaseQuantity}
               />
             </main>
           }

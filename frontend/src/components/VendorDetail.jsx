@@ -1,7 +1,14 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ProductCard from "./ProductCard";
 
-export default function VendorDetail({ vendors = [], products = [], onAddToCart }) {
+export default function VendorDetail({
+  vendors = [],
+  products = [],
+  cartItems = [],
+  onAddToCart,
+  onIncreaseQuantity,
+  onDecreaseQuantity,
+}) {
   const navigate = useNavigate();
   const { id } = useParams();
   const normalizedId = decodeURIComponent(id || "").trim().toLowerCase();
@@ -105,7 +112,14 @@ export default function VendorDetail({ vendors = [], products = [], onAddToCart 
         {vendorProducts.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {vendorProducts.map((product) => (
-              <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                cartItems={cartItems}
+                onAddToCart={onAddToCart}
+                onIncreaseQuantity={onIncreaseQuantity}
+                onDecreaseQuantity={onDecreaseQuantity}
+              />
             ))}
           </div>
         ) : (
