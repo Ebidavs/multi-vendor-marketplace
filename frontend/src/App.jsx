@@ -34,6 +34,11 @@ export default function App() {
     handleAddToCart(...args);
   };
 
+  const increaseQuantity = (...args) => {
+    setCartViewed(false);
+    handleIncreaseQuantity(...args);
+  };
+
   const {
     searchQuery,
     setSearchQuery,
@@ -88,7 +93,7 @@ export default function App() {
             products={filteredProducts}
             cartItems={cartItems}
             onAddToCart={addToCart}
-            onIncreaseQuantity={handleIncreaseQuantity}
+            onIncreaseQuantity={increaseQuantity}
             onDecreaseQuantity={handleDecreaseQuantity}
           />
         </div>
@@ -126,7 +131,7 @@ export default function App() {
               <CartBar
                 cartItems={cartItems}
                 onClearCart={handleClearCart}
-                onIncreaseQuantity={handleIncreaseQuantity}
+                onIncreaseQuantity={increaseQuantity}
                 onDecreaseQuantity={handleDecreaseQuantity}
                 onRemoveItem={handleRemoveItem}
               />
@@ -153,7 +158,7 @@ export default function App() {
                 products={products}
                 cartItems={cartItems}
                 onAddToCart={addToCart}
-                onIncreaseQuantity={handleIncreaseQuantity}
+                onIncreaseQuantity={increaseQuantity}
                 onDecreaseQuantity={handleDecreaseQuantity}
               />
             </main>
