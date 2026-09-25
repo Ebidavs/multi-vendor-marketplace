@@ -1,6 +1,7 @@
 import Navbar from "../components/Navbar"
 
 import heroImage from "../assets/hero.png"; 
+import shoppingImage from "../assets/web-shopping.svg";
 import "./Home.css";
 
 
@@ -99,6 +100,9 @@ return (
             <div className="hero-buttons">
                 <button className="primary-btn">Shop Now</button>
             </div>
+        </div>
+        <div className="hero-image">
+            <img src={shoppingImage} alt="Online shopping"></img>
         </div>
 
         </section>
