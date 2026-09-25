@@ -12,15 +12,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/categories', categoryRoutes);
-app.use('/api/products', productRoutes);
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/products', productRoutes);
 
 // each teammate should add their own two lines here as their routes are ready
-// app.use('/api/auth', require('./routes/authRoutes'));       // Backend Dev 1
-// app.use('/api/cart', require('./routes/cartRoutes'));       // Backend Dev 3
-// app.use('/api/orders', require('./routes/orderRoutes'));    // Backend Dev 3
-// app.use('/api/shops', require('./routes/shopRoutes'));      // Backend Dev 4
-// app.use('/api/admin', require('./routes/adminRoutes'));     // Backend Dev 4
+// app.use('/api/v1/auth', require('./routes/authRoutes'));       // Backend Dev 1
+// app.use('/api/v1/cart', require('./routes/cartRoutes'));       // Backend Dev 3
+// app.use('/api/v1/orders', require('./routes/orderRoutes'));    // Backend Dev 3
+// app.use('/api/v1/shops', require('./routes/shopRoutes'));      // Backend Dev 4
+// app.use('/api/v1/admin', require('./routes/adminRoutes'));     // Backend Dev 4
 
 // must be registered after every route, this is what catches every error
 app.use(errorHandler);
