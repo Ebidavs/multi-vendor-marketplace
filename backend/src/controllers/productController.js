@@ -4,6 +4,7 @@ const AppError = require('../utils/appError');
 const sendSuccess = require('../utils/response');
 const uploadBufferToCloudinary = require('../utils/uploadToCloudinary');
 const deleteFromCloudinary = require('../utils/deleteFromCloudinary');
+const { formatProductSummary, formatProductDetail } = require('../utils/formatProduct');
 
 const SORT_OPTIONS = {
   newest: '-createdAt',
@@ -24,10 +25,6 @@ exports.createProduct = async (req, res, next) => {
     return next(new AppError('Category not found', 404));
   }
 
-  // req.files comes from the upload.array('images', 5) middleware on the
-  // route. each file's raw bytes live in file.buffer, which we push to
-  // Cloudinary. we keep the hosted url for the public response and the
-  // public_id privately, so a product's images can be cleaned up later
   const uploadResults = await Promise.all(
     req.files.map((file) => uploadBufferToCloudinary(file.buffer))
   );
@@ -45,15 +42,18 @@ exports.createProduct = async (req, res, next) => {
     vendor: req.user.id,
   });
 
-  sendSuccess(res, 201, 'Product created successfully', product);
+  product.category = categoryExists;
+
+  sendSuccess(res, 201, 'Product created successfully', formatProductDetail(product));
 };
 
 exports.getProducts = async (req, res, next) => {
-  const { category, minPrice, maxPrice, minRating, inStock, search, sort } = req.query;
+  const { category, minPrice, maxPrice, minRating, inStock, search, sort, vendor } = req.query;
 
   const filter = { isActive: true };
 
   if (category) filter.category = category;
+  if (vendor) filter.vendor = vendor;
 
   if (minPrice || maxPrice) {
     filter.price = {};
@@ -80,12 +80,12 @@ exports.getProducts = async (req, res, next) => {
   const skip = (page - 1) * limit;
 
   const [products, total] = await Promise.all([
-    Product.find(filter).sort(sortBy).skip(skip).limit(limit),
+    Product.find(filter).sort(sortBy).skip(skip).limit(limit).populate('category', 'name'),
     Product.countDocuments(filter),
   ]);
 
   sendSuccess(res, 200, 'Products fetched successfully', {
-    products,
+    products: products.map(formatProductSummary),
     pagination: {
       total,
       page,
@@ -96,7 +96,7 @@ exports.getProducts = async (req, res, next) => {
 };
 
 exports.getProduct = async (req, res, next) => {
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id).populate('category', 'name');
 
   if (!product || !product.isActive) {
     return next(new AppError('Product not found', 404));
@@ -106,16 +106,20 @@ exports.getProduct = async (req, res, next) => {
     category: product.category,
     _id: { $ne: product._id },
     isActive: true,
-  }).limit(4);
+  })
+    .limit(4)
+    .populate('category', 'name');
 
   sendSuccess(res, 200, 'Product fetched successfully', {
-    product,
-    relatedProducts,
+    product: formatProductDetail(product),
+    relatedProducts: relatedProducts.map(formatProductSummary),
   });
 };
 
 exports.updateProduct = async (req, res, next) => {
-  const product = await Product.findById(req.params.id).select('+imagePublicIds');
+  const product = await Product.findById(req.params.id)
+    .select('+imagePublicIds')
+    .populate('category', 'name');
 
   if (!product) {
     return next(new AppError('Product not found', 404));
@@ -125,16 +129,11 @@ exports.updateProduct = async (req, res, next) => {
     return next(new AppError('You can only update your own products', 403));
   }
 
-  // new images, if any were uploaded, replace the old set entirely
   if (req.files && req.files.length > 0) {
     const uploadResults = await Promise.all(
       req.files.map((file) => uploadBufferToCloudinary(file.buffer))
     );
 
-    // clean up the old images now that new ones exist.
-    // if cloudinary is briefly unreachable, the vendor's update
-    // should still go through, we just log it instead of failing the
-    // whole request over a storage cleanup issue
     if (product.imagePublicIds && product.imagePublicIds.length > 0) {
       try {
         await deleteFromCloudinary(product.imagePublicIds);
@@ -155,8 +154,9 @@ exports.updateProduct = async (req, res, next) => {
   });
 
   await product.save();
+  await product.populate('category', 'name');
 
-  sendSuccess(res, 200, 'Product updated successfully', product);
+  sendSuccess(res, 200, 'Product updated successfully', formatProductDetail(product));
 };
 
 exports.deleteProduct = async (req, res, next) => {
@@ -170,8 +170,6 @@ exports.deleteProduct = async (req, res, next) => {
     return next(new AppError('You can only delete your own products', 403));
   }
 
-  // same best-effort cleanup as above: a cloudinary hiccup shouldn't
-  // block the vendor from deleting their product
   if (product.imagePublicIds && product.imagePublicIds.length > 0) {
     try {
       await deleteFromCloudinary(product.imagePublicIds);
