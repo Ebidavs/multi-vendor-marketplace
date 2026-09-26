@@ -53,6 +53,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    specifications: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -64,6 +68,10 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ ratingsAverage: -1 });
+
+productSchema.virtual('id').get(function () {
+  return this._id.toString();
+});
 
 productSchema.set('toJSON', {
   transform: (doc, ret) => {
