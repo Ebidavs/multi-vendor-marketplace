@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   ALL_CATEGORY,
@@ -8,35 +8,67 @@ import {
   SORT_OPTIONS,
 } from '../utils/constants';
 
-const sanitizePrice = (value, fallback) => {
-  if (value === '' || value === null || value === undefined) {
-    return fallback;
-  }
-
-  const num = Number(value);
-  if (!Number.isFinite(num)) {
-    return fallback;
-  }
-
-  return Math.max(0, Math.min(num, DEFAULT_MAX_PRICE));
-};
-
 export function useProductFilters(products) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
-  const [minPrice, setMinPrice] = useState(DEFAULT_MIN_PRICE);
-  const [maxPrice, setMaxPrice] = useState(DEFAULT_MAX_PRICE);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState(DEFAULT_SORT);
 
+  const categoryProducts = useMemo(
+    () => products.filter((product) =>
+      selectedCategory === ALL_CATEGORY || product.category === selectedCategory
+    ),
+    [products, selectedCategory]
+  );
+
+  const catalogPriceBounds = useMemo(() => {
+    if (products.length === 0) {
+      return { min: DEFAULT_MIN_PRICE, max: DEFAULT_MAX_PRICE };
+    }
+
+    return products.reduce(
+      (bounds, product) => ({
+        min: Math.min(bounds.min, product.price),
+        max: Math.max(bounds.max, product.price),
+      }),
+      { min: Infinity, max: -Infinity }
+    );
+  }, [products]);
+
+  const priceBounds = useMemo(() => {
+    if (categoryProducts.length === 0) {
+      return { min: DEFAULT_MIN_PRICE, max: DEFAULT_MAX_PRICE };
+    }
+
+    return categoryProducts.reduce(
+      (bounds, product) => ({
+        min: Math.min(bounds.min, product.price),
+        max: Math.max(bounds.max, product.price),
+      }),
+      { min: Infinity, max: -Infinity }
+    );
+  }, [categoryProducts]);
+
+  const [minPrice, setMinPrice] = useState(priceBounds.min);
+  const [maxPrice, setMaxPrice] = useState(priceBounds.max);
+
+  useEffect(() => {
+    setMinPrice(priceBounds.min);
+    setMaxPrice(priceBounds.max);
+  }, [priceBounds]);
+
   const handleMinPriceChange = (value) => {
-    const nextMin = sanitizePrice(value, DEFAULT_MIN_PRICE);
-    setMinPrice(nextMin > maxPrice ? maxPrice : nextMin);
+    const nextMin = Number(value);
+    if (Number.isFinite(nextMin)) {
+      setMinPrice(Math.max(priceBounds.min, Math.min(nextMin, maxPrice)));
+    }
   };
 
   const handleMaxPriceChange = (value) => {
-    const nextMax = sanitizePrice(value, DEFAULT_MAX_PRICE);
-    setMaxPrice(nextMax < minPrice ? minPrice : nextMax);
+    const nextMax = Number(value);
+    if (Number.isFinite(nextMax)) {
+      setMaxPrice(Math.min(priceBounds.max, Math.max(nextMax, minPrice)));
+    }
   };
 
   const filteredProducts = useMemo(() => {
@@ -49,8 +81,7 @@ export function useProductFilters(products) {
         const matchesCategory =
           selectedCategory === ALL_CATEGORY || product.category === selectedCategory;
 
-        const matchesPrice =
-          product.price >= minPrice && product.price <= maxPrice;
+        const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
 
         const matchesStock = inStockOnly ? product.inStock : true;
 
@@ -67,8 +98,8 @@ export function useProductFilters(products) {
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedCategory(ALL_CATEGORY);
-    setMinPrice(DEFAULT_MIN_PRICE);
-    setMaxPrice(DEFAULT_MAX_PRICE);
+    setMinPrice(catalogPriceBounds.min);
+    setMaxPrice(catalogPriceBounds.max);
     setInStockOnly(false);
     setSortBy(DEFAULT_SORT);
   };
@@ -78,6 +109,8 @@ export function useProductFilters(products) {
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
+    priceFloor: priceBounds.min,
+    priceCeiling: priceBounds.max,
     minPrice,
     setMinPrice: handleMinPriceChange,
     maxPrice,

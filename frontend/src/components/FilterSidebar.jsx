@@ -1,4 +1,8 @@
+import { useEffect, useState } from "react";
+
 export default function FilterSidebar({
+  priceFloor,
+  priceCeiling,
   minPrice,
   onMinPriceChange,
   maxPrice,
@@ -7,27 +11,41 @@ export default function FilterSidebar({
   onInStockChange,
   onResetFilters,
 }) {
-  const MAX_LIMIT = 5000000;
+  const priceSpan = priceCeiling - priceFloor;
+  const minProgress = priceSpan > 0 ? ((minPrice - priceFloor) / priceSpan) * 100 : 0;
+  const maxProgress = priceSpan > 0 ? ((maxPrice - priceFloor) / priceSpan) * 100 : 100;
+  const [minDraft, setMinDraft] = useState(String(minPrice));
+  const [maxDraft, setMaxDraft] = useState(String(maxPrice));
 
-  const sanitizePrice = (value, fallback) => {
-    if (value === '' || value === null || value === undefined) return fallback;
+  useEffect(() => {
+    setMinDraft(String(minPrice));
+    setMaxDraft(String(maxPrice));
+  }, [minPrice, maxPrice]);
 
-    const num = Number(value);
-    if (!Number.isFinite(num)) return fallback;
-
-    return Math.max(0, Math.min(num, MAX_LIMIT));
+  const commitMin = () => {
+    const value = Number(minDraft);
+    const nextValue = Number.isFinite(value)
+      ? Math.max(priceFloor, Math.min(value, maxPrice))
+      : priceFloor;
+    setMinDraft(String(nextValue));
+    onMinPriceChange(nextValue);
   };
 
-  const handleMinChange = (val) => {
-    const nextMin = sanitizePrice(val, 0);
-    const safeMin = nextMin > maxPrice ? maxPrice : nextMin;
-    onMinPriceChange(Math.max(0, safeMin));
+  const commitMax = () => {
+    const value = Number(maxDraft);
+    const nextValue = Number.isFinite(value)
+      ? Math.min(priceCeiling, Math.max(value, minPrice))
+      : priceCeiling;
+    setMaxDraft(String(nextValue));
+    onMaxPriceChange(nextValue);
   };
 
-  const handleMaxChange = (val) => {
-    const nextMax = sanitizePrice(val, MAX_LIMIT);
-    const safeMax = nextMax < minPrice ? minPrice : nextMax;
-    onMaxPriceChange(Math.min(MAX_LIMIT, safeMax));
+  const commitOnEnter = (event, commitValue) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitValue();
+      event.currentTarget.blur();
+    }
   };
 
   return (
@@ -49,73 +67,75 @@ export default function FilterSidebar({
           Price Range (₦)
         </h3>
 
-        {/* Inputs */}
-        <div className="flex items-center space-x-2">
-          <div className="flex-1">
-            <label className="text-[10px] font-semibold uppercase text-gray-400">
+        <div className="pt-1">
+          <div className="mb-3 grid grid-cols-2 gap-3">
+            <label className="block text-[10px] font-semibold uppercase text-gray-400">
               Min
+              <input
+                type="number"
+                aria-label="Minimum price"
+                min={priceFloor}
+                max={maxPrice}
+                value={minDraft}
+                onChange={(event) => setMinDraft(event.target.value)}
+                onBlur={commitMin}
+                onKeyDown={(event) => commitOnEnter(event, commitMin)}
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm font-medium text-gray-800 outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-200"
+              />
             </label>
-            <input
-              type="number"
-              min="0"
-              max={maxPrice}
-              value={minPrice}
-              onChange={(e) => handleMinChange(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3 py-1.5 text-xs font-medium text-gray-800 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            />
-          </div>
-          <span className="mt-4 text-gray-300">-</span>
-          <div className="flex-1">
-            <label className="text-[10px] font-semibold uppercase text-gray-400">
+            <label className="block text-[10px] font-semibold uppercase text-gray-400">
               Max
+              <input
+                type="number"
+                aria-label="Maximum price"
+                min={minPrice}
+                max={priceCeiling}
+                value={maxDraft}
+                onChange={(event) => setMaxDraft(event.target.value)}
+                onBlur={commitMax}
+                onKeyDown={(event) => commitOnEnter(event, commitMax)}
+                className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm font-medium text-gray-800 outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-200"
+              />
             </label>
+          </div>
+          <div className="mb-2 flex justify-between text-[11px] font-medium text-gray-500">
+            <span className="font-semibold text-gray-800">₦{minPrice.toLocaleString()}</span>
+            <span className="font-semibold text-gray-800">₦{maxPrice.toLocaleString()}</span>
+          </div>
+          <div className="relative h-6">
+            <div
+              aria-hidden="true"
+              className="absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full"
+              style={{
+                background: `linear-gradient(to right, #e5e7eb ${minProgress}%, #059669 ${minProgress}%, #059669 ${maxProgress}%, #e5e7eb ${maxProgress}%)`,
+              }}
+            />
             <input
-              type="number"
-              min={minPrice}
-              max={MAX_LIMIT}
+              type="range"
+              aria-label="Minimum price slider"
+              min={priceFloor}
+              max={Math.max(priceFloor, maxPrice - 1)}
+              step="1"
+              value={minPrice}
+              onChange={(event) => onMinPriceChange(event.target.value)}
+              className="price-range-thumb"
+              style={{ zIndex: minPrice >= maxPrice - 1 ? 4 : 3 }}
+            />
+            <input
+              type="range"
+              aria-label="Maximum price slider"
+              min={Math.min(priceCeiling, minPrice + 1)}
+              max={priceCeiling}
+              step="1"
               value={maxPrice}
-              onChange={(e) => handleMaxChange(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3 py-1.5 text-xs font-medium text-gray-800 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200"
+              onChange={(event) => onMaxPriceChange(event.target.value)}
+              className="price-range-thumb"
+              style={{ zIndex: minPrice >= maxPrice - 1 ? 3 : 4 }}
             />
           </div>
-        </div>
-
-        {/* Sliders */}
-        <div className="space-y-3 pt-1">
-          <div>
-            <div className="mb-1 flex justify-between text-[11px] font-medium text-gray-500">
-              <span>Min Slider</span>
-              <span className="font-semibold text-gray-700">
-                ₦{(minPrice || 0).toLocaleString()}
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max={maxPrice}
-              step="10000"
-              value={minPrice || 0}
-              onChange={(e) => handleMinChange(e.target.value)}
-              className="w-full cursor-pointer accent-emerald-600"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 flex justify-between text-[11px] font-medium text-gray-500">
-              <span>Max Slider</span>
-              <span className="font-semibold text-gray-700">
-                ₦{(maxPrice || 0).toLocaleString()}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={minPrice}
-              max={MAX_LIMIT}
-              step="10000"
-              value={maxPrice || MAX_LIMIT}
-              onChange={(e) => handleMaxChange(e.target.value)}
-              className="w-full cursor-pointer accent-emerald-600"
-            />
+          <div className="mt-2 flex justify-between text-[10px] text-gray-400">
+            <span>Minimum</span>
+            <span>Maximum</span>
           </div>
         </div>
       </div>

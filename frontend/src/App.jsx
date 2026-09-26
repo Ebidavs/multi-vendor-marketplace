@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -16,9 +16,17 @@ import { useCart } from "./hooks/useCart";
 import { useProductFilters } from "./hooks/useProductFilters";
 import { categoriesList, dummyProducts, dummyVendors } from "./data/productsData";
 
+const getPageSize = () => {
+  if (window.innerWidth < 640) return 4;
+  if (window.innerWidth < 1024) return 8;
+  return 12;
+};
+
 export default function App() {
   const [products] = useState(dummyProducts);
   const [cartViewed, setCartViewed] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(getPageSize);
 
   const {
     cartItems,
@@ -44,6 +52,8 @@ export default function App() {
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
+    priceFloor,
+    priceCeiling,
     minPrice,
     setMinPrice,
     maxPrice,
@@ -55,6 +65,25 @@ export default function App() {
     filteredProducts,
     handleResetFilters,
   } = useProductFilters(products);
+
+  const pageCount = Math.ceil(filteredProducts.length / pageSize);
+  const pageStart = (currentPage - 1) * pageSize;
+  const paginatedProducts = filteredProducts.slice(pageStart, pageStart + pageSize);
+  const firstVisiblePage = Math.max(1, Math.min(currentPage - 2, pageCount - 4));
+  const visiblePages = Array.from(
+    { length: Math.min(pageCount, 5) },
+    (_, index) => firstVisiblePage + index
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredProducts, pageSize]);
+
+  useEffect(() => {
+    const updatePageSize = () => setPageSize(getPageSize());
+    window.addEventListener("resize", updatePageSize);
+    return () => window.removeEventListener("resize", updatePageSize);
+  }, []);
 
   const marketplacePage = (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
@@ -80,6 +109,8 @@ export default function App() {
       {/* 3. Main Grid & Filters */}
       <div className="flex flex-col gap-8 md:flex-row pt-2">
         <FilterSidebar
+          priceFloor={priceFloor}
+          priceCeiling={priceCeiling}
           minPrice={minPrice}
           onMinPriceChange={setMinPrice}
           maxPrice={maxPrice}
@@ -90,12 +121,76 @@ export default function App() {
         />
         <div className="flex-1">
           <ProductGrid
-            products={filteredProducts}
+            products={paginatedProducts}
             cartItems={cartItems}
             onAddToCart={addToCart}
             onIncreaseQuantity={increaseQuantity}
             onDecreaseQuantity={handleDecreaseQuantity}
           />
+          {pageCount > 1 && (
+            <nav aria-label="Product pages" className="mt-8 flex justify-center gap-2">
+              {pageCount > 5 && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="First page"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="h-9 min-w-9 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    |&lt;
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Previous page"
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={currentPage === 1}
+                    className="h-9 min-w-9 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    &lt;
+                  </button>
+                </>
+              )}
+              {visiblePages.map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  aria-label={`Page ${page}`}
+                  aria-current={currentPage === page ? "page" : undefined}
+                  onClick={() => setCurrentPage(page)}
+                  className={`h-9 min-w-9 rounded-md border px-3 text-sm font-semibold transition ${
+                    currentPage === page
+                      ? "border-emerald-700 bg-emerald-700 text-white"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-emerald-600 hover:text-emerald-700"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              {pageCount > 5 && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Next page"
+                    onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
+                    disabled={currentPage === pageCount}
+                    className="h-9 min-w-9 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    &gt;
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Last page"
+                    onClick={() => setCurrentPage(pageCount)}
+                    disabled={currentPage === pageCount}
+                    className="h-9 min-w-9 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    &gt;|
+                  </button>
+                </>
+              )}
+            </nav>
+          )}
         </div>
       </div>
 
