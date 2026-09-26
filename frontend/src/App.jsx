@@ -107,7 +107,7 @@ export default function App() {
       </div>
 
       {/* 3. Main Grid & Filters */}
-      <div className="flex flex-col gap-8 md:flex-row pt-2">
+      <div className="flex flex-col gap-8 pt-2 xl:flex-row">
         <FilterSidebar
           priceFloor={priceFloor}
           priceCeiling={priceCeiling}
@@ -128,7 +128,7 @@ export default function App() {
             onDecreaseQuantity={handleDecreaseQuantity}
           />
           {pageCount > 1 && (
-            <nav aria-label="Product pages" className="mt-8 flex justify-center gap-2">
+            <nav aria-label="Product pages" className="mt-8 flex flex-wrap justify-center gap-1 sm:gap-2">
               {pageCount > 5 && (
                 <>
                   <button
@@ -136,7 +136,7 @@ export default function App() {
                     aria-label="First page"
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
-                    className="h-9 min-w-9 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     |&lt;
                   </button>
@@ -145,7 +145,7 @@ export default function App() {
                     aria-label="Previous page"
                     onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                     disabled={currentPage === 1}
-                    className="h-9 min-w-9 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     &lt;
                   </button>
@@ -158,7 +158,7 @@ export default function App() {
                   aria-label={`Page ${page}`}
                   aria-current={currentPage === page ? "page" : undefined}
                   onClick={() => setCurrentPage(page)}
-                  className={`h-9 min-w-9 rounded-md border px-3 text-sm font-semibold transition ${
+                  className={`h-11 min-w-11 rounded-md border px-3 text-sm font-semibold transition ${
                     currentPage === page
                       ? "border-emerald-700 bg-emerald-700 text-white"
                       : "border-gray-200 bg-white text-gray-700 hover:border-emerald-600 hover:text-emerald-700"
@@ -174,7 +174,7 @@ export default function App() {
                     aria-label="Next page"
                     onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
                     disabled={currentPage === pageCount}
-                    className="h-9 min-w-9 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     &gt;
                   </button>
@@ -183,7 +183,7 @@ export default function App() {
                     aria-label="Last page"
                     onClick={() => setCurrentPage(pageCount)}
                     disabled={currentPage === pageCount}
-                    className="h-9 min-w-9 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     &gt;|
                   </button>

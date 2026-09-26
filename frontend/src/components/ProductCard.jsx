@@ -66,7 +66,7 @@ export default function ProductCard({
         {!inStock ? (
           <button
             disabled
-            className="shrink-0 cursor-not-allowed whitespace-nowrap rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-semibold text-gray-400"
+            className="min-h-11 shrink-0 cursor-not-allowed whitespace-nowrap rounded-lg bg-gray-100 px-3 text-xs font-semibold text-gray-400"
           >
             Unavailable
           </button>
@@ -75,7 +75,7 @@ export default function ProductCard({
             <button
               type="button"
               onClick={() => onDecreaseQuantity(cartItem.id)}
-              className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-600 text-lg font-bold leading-none text-white transition hover:bg-emerald-700"
+              className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-600 text-lg font-bold leading-none text-white transition hover:bg-emerald-700"
               aria-label={`Decrease ${displayTitle} quantity`}
             >
               -
@@ -86,7 +86,7 @@ export default function ProductCard({
             <button
               type="button"
               onClick={() => onIncreaseQuantity(cartItem.id)}
-              className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-600 text-lg font-bold leading-none text-white transition hover:bg-emerald-700"
+              className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-600 text-lg font-bold leading-none text-white transition hover:bg-emerald-700"
               aria-label={`Increase ${displayTitle} quantity`}
             >
               +
@@ -96,7 +96,7 @@ export default function ProductCard({
           <button
             type="button"
             onClick={() => onAddToCart(product)}
-            className="shrink-0 whitespace-nowrap rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 active:scale-95"
+            className="min-h-11 shrink-0 whitespace-nowrap rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 active:scale-95"
           >
             Add to Cart
           </button>

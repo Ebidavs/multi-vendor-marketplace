@@ -1,20 +1,23 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Navbar({ cartCount = 0, onCartClick }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
-    <header className="bg-emerald-600 text-white shadow-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <header className="relative z-30 bg-emerald-600 text-white shadow-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 sm:py-4 lg:px-8">
         {/* Logo */}
         <Link
           to="/"
-          className="text-2xl font-bold tracking-tight text-white transition-colors hover:text-emerald-100"
+          className="text-xl font-bold tracking-tight text-white transition-colors hover:text-emerald-100 sm:text-2xl"
         >
           Marketplace
         </Link>
 
         {/* Navigation Links & Cart Icon */}
-        <div className="flex items-center gap-6">
-          <nav className="flex items-center gap-6 text-sm font-medium">
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
+          <nav className="hidden items-center gap-4 text-sm font-medium md:flex lg:gap-6">
             <Link to="/" className="hover:text-emerald-200 transition-colors">
               Home
             </Link>
@@ -34,7 +37,7 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
             to="/cart"
             onClick={onCartClick}
             aria-label="Shopping Cart"
-            className="relative flex items-center justify-center rounded-lg bg-emerald-700 p-2.5 text-white transition-all hover:bg-emerald-800"
+            className="relative flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-700 text-white transition-all hover:bg-emerald-800"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -61,8 +64,30 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
               </span>
             )}
           </Link>
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="flex h-11 w-11 flex-col items-center justify-center gap-1.5 rounded-lg border border-emerald-400/50 text-white md:hidden"
+          >
+            <span className="h-0.5 w-5 rounded-full bg-current" />
+            <span className="h-0.5 w-5 rounded-full bg-current" />
+            <span className="h-0.5 w-5 rounded-full bg-current" />
+          </button>
         </div>
       </div>
+      {mobileMenuOpen && (
+        <nav
+          aria-label="Mobile navigation"
+          className="absolute inset-x-0 top-full grid gap-1 border-t border-emerald-500 bg-emerald-700 p-3 text-sm font-medium shadow-lg md:hidden"
+        >
+          <Link onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center rounded-md px-3 hover:bg-emerald-600" to="/">Home</Link>
+          <Link onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center rounded-md px-3 hover:bg-emerald-600" to="/products">Products</Link>
+          <Link onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center rounded-md px-3 hover:bg-emerald-600" to="/login">Login</Link>
+          <Link onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center rounded-md px-3 hover:bg-emerald-600" to="/register">Register</Link>
+        </nav>
+      )}
     </header>
   );
 }

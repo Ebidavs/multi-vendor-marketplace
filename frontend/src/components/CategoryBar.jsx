@@ -25,7 +25,7 @@ export default function CategoryBar({
       <button
         onClick={() => scroll("left")}
         aria-label="Scroll Left"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -50,7 +50,7 @@ export default function CategoryBar({
             <button
               key={cat}
               onClick={() => onSelectCategory(cat)}
-              className={`rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all focus:outline-none shrink-0 ${
+              className={`min-h-11 rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all focus:outline-none shrink-0 ${
                 isSelected
                   ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
                   : "border border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700"
@@ -66,7 +66,7 @@ export default function CategoryBar({
       <button
         onClick={() => scroll("right")}
         aria-label="Scroll Right"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

@@ -11,6 +11,7 @@ export default function FilterSidebar({
   onInStockChange,
   onResetFilters,
 }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const priceSpan = priceCeiling - priceFloor;
   const minProgress = priceSpan > 0 ? ((minPrice - priceFloor) / priceSpan) * 100 : 0;
   const maxProgress = priceSpan > 0 ? ((maxPrice - priceFloor) / priceSpan) * 100 : 100;
@@ -21,6 +22,17 @@ export default function FilterSidebar({
     setMinDraft(String(minPrice));
     setMaxDraft(String(maxPrice));
   }, [minPrice, maxPrice]);
+
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mobileOpen]);
 
   const commitMin = () => {
     const value = Number(minDraft);
@@ -49,17 +61,49 @@ export default function FilterSidebar({
   };
 
   return (
-    <aside className="w-full rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm transition-all md:w-64">
+    <>
+      <button
+        type="button"
+        aria-expanded={mobileOpen}
+        onClick={() => setMobileOpen(true)}
+        className="mb-2 flex h-11 w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-800 shadow-sm xl:hidden"
+      >
+        <span>Filters</span>
+        <span className="text-emerald-700">Open</span>
+      </button>
+      {mobileOpen && (
+        <button
+          type="button"
+          aria-label="Close filters"
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-40 bg-gray-950/40 xl:hidden"
+        />
+      )}
+      <aside className={`w-full rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm transition-all xl:sticky xl:top-4 xl:block xl:w-64 xl:self-start ${
+        mobileOpen
+          ? "fixed inset-x-4 top-20 z-50 max-h-[calc(100dvh-6rem)] overflow-y-auto"
+          : "hidden xl:block"
+      }`}>
       <div className="mb-5 flex items-center justify-between border-b border-gray-100 pb-3.5">
         <h2 className="text-sm font-bold uppercase tracking-wider text-gray-800">
           Filters
         </h2>
-        <button
-          onClick={onResetFilters}
-          className="text-xs font-semibold text-emerald-600 transition-colors hover:text-emerald-700 hover:underline"
-        >
-          Reset All
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onResetFilters}
+            className="min-h-11 px-2 text-xs font-semibold text-emerald-600 transition-colors hover:text-emerald-700 hover:underline"
+          >
+            Reset All
+          </button>
+          <button
+            type="button"
+            aria-label="Close filters"
+            onClick={() => setMobileOpen(false)}
+            className="flex h-11 w-11 items-center justify-center rounded-md text-xl text-gray-600 hover:bg-gray-100 xl:hidden"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div className="space-y-5">
@@ -142,7 +186,7 @@ export default function FilterSidebar({
 
       {/* Stock Checkbox */}
       <div className="mt-6 border-t border-gray-100 pt-4">
-        <label className="group flex cursor-pointer items-center space-x-3">
+        <label className="group flex min-h-11 cursor-pointer items-center space-x-3">
           <input
             type="checkbox"
             checked={inStockOnly}
@@ -154,6 +198,7 @@ export default function FilterSidebar({
           </span>
         </label>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
