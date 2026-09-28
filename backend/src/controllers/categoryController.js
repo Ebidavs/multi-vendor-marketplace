@@ -1,13 +1,12 @@
 const Category = require('../models/category');
 const Product = require('../models/product');
 const sendSuccess = require('../utils/response');
+const formatCategory = require('../utils/formatCategory');
 
 exports.createCategory = async (req, res, next) => {
   const { name, icon, description } = req.body;
-
   const category = await Category.create({ name, icon, description });
-
-  sendSuccess(res, 201, 'Category created successfully', category);
+  sendSuccess(res, 201, 'Category created successfully', formatCategory(category));
 };
 
 exports.getCategories = async (req, res, next) => {
@@ -23,10 +22,7 @@ exports.getCategories = async (req, res, next) => {
         category: category._id,
         isActive: true,
       });
-      return {
-        ...category.toObject(),
-        productCount,
-      };
+      return formatCategory(category, productCount);
     })
   );
 

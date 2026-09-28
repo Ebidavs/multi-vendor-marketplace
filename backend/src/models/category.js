@@ -22,4 +22,8 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+categorySchema.virtual('id').get(function () {
+  return this._id.toString();
+});
+
 module.exports = mongoose.model('Category', categorySchema);
