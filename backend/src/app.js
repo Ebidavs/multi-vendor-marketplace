@@ -16,9 +16,9 @@ app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/products', productRoutes);
 
 // each teammate should add their own two lines here as their routes are ready
-// app.use('/api/v1/auth', require('./routes/authRoutes'));       // Backend Dev 1
-// app.use('/api/v1/cart', require('./routes/cartRoutes'));       // Backend Dev 3
-// app.use('/api/v1/orders', require('./routes/orderRoutes'));    // Backend Dev 3
+// app.use('/api/v1/auth', require('./routes/authRoutes'));       // Backend Dev 1 Cart & Order Routes
+const orderRoutes = require('./routes/orderRoutes');
+app.use('/api/v1', orderRoutes);
 // app.use('/api/v1/shops', require('./routes/shopRoutes'));      // Backend Dev 4
 // app.use('/api/v1/admin', require('./routes/adminRoutes'));     // Backend Dev 4
 
