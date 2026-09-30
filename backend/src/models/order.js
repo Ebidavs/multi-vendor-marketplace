@@ -27,10 +27,18 @@ const OrderSchema = new mongoose.Schema(
  },
  // Where should we ship it?
  shippingAddress: {
- address: {
+	fullName: {
  type: String,
  required: true
  },
+	phone: {
+		type: String,
+		required: true
+	},
+	street: {
+		type: String,
+		required: true
+	},
  city: {
  type: String,
  required: true
@@ -39,9 +47,9 @@ const OrderSchema = new mongoose.Schema(
  type: String,
  required: true
  },
- zipCode: {
- type: String,
- required: true
+	country: {
+		type: String,
+		default: 'Nigeria'
  }
  },
  // How is customer paying?

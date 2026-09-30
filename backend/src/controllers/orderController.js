@@ -1,10 +1,36 @@
-
-
+const mongoose = require('mongoose');
 const Cart = require('../models/cart');
 const Order = require('../models/order');
-const OrderItem = require('../models/OrderItem');
+const OrderItem = require('../models/orderItems');
 const Product = require('../models/product');
-const Shop = require('../models/Shop'); // Capital S
+const Shop = require('../models/shop');
+const userModel = require('../models/user');
+
+const User = userModel.User || userModel;
+
+const getAvailableProduct = async (productId, session) => {
+  let productQuery = Product.findOne({ _id: productId, isActive: true });
+  if (session) productQuery = productQuery.session(session);
+  const product = await productQuery;
+  if (!product) return null;
+
+  let vendorQuery = User.findOne({
+    _id: product.vendor,
+    role: 'vendor',
+    isActive: true,
+    deletedAt: null,
+  });
+  if (session) vendorQuery = vendorQuery.session(session);
+  const vendor = await vendorQuery;
+  if (!vendor) return null;
+
+  let shopQuery = Shop.findOne({ owner: vendor._id, isActive: true });
+  if (session) shopQuery = shopQuery.session(session);
+  const shop = await shopQuery;
+  if (!shop) return null;
+
+  return { product, vendor, shop };
+};
 
 const getCart = async (req, res) => {
   try {
@@ -55,41 +81,15 @@ const addToCart = async (req, res) => {
     }
 
     // Get product
-    const product = await Product.findById(productId);
-    if (!product) {
+    const availableProduct = await getAvailableProduct(productId);
+    if (!availableProduct) {
       return res.status(404).json({
         success: false,
-        message: 'Product not found',
+        message: 'Product not found or unavailable',
         data: null
       });
     }
-
-    // Check product is active
-    if (!product.isActive) {
-      return res.status(400).json({
-        success: false,
-        message: `${product.name} is no longer available`,
-        data: null
-      });
-    }
-
-    // Check vendor exists and is active
-    const vendor = await Shop.findById(product.vendor);
-    if (!vendor) {
-      return res.status(400).json({
-        success: false,
-        message: `Vendor for ${product.name} not found`,
-        data: null
-      });
-    }
-
-    if (!vendor.isActive) {
-      return res.status(400).json({
-        success: false,
-        message: `${vendor.name} is no longer active`,
-        data: null
-      });
-    }
+    const { product } = availableProduct;
 
     // Check stock
     if (product.stock < quantity) {
@@ -186,7 +186,15 @@ const updateCartItem = async (req, res) => {
     }
 
     // Get product and check stock
-    const product = await Product.findById(cartItem.productId);
+    const availableProduct = await getAvailableProduct(cartItem.productId);
+    if (!availableProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found or unavailable',
+        data: null
+      });
+    }
+    const { product } = availableProduct;
     if (product.stock < quantity) {
       return res.status(400).json({
         success: false,
@@ -232,8 +240,16 @@ const removeCartItem = async (req, res) => {
       });
     }
 
-    // Remove item
+    const initialLength = cart.items.length;
     cart.items = cart.items.filter(item => item._id.toString() !== itemId);
+    if (cart.items.length === initialLength) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found in cart',
+        data: null
+      });
+    }
+
     await cart.save();
 
     res.status(200).json({
@@ -286,6 +302,7 @@ const clearCart = async (req, res) => {
 
 
 const createOrder = async (req, res) => {
+  let session;
   try {
     const userId = req.user.id;
     const { shippingAddress, paymentMethod } = req.body;
@@ -299,15 +316,22 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Validate shipping address has all fields
-    const { address, city, state, zipCode } = shippingAddress;
-    if (!address || !city || !state || !zipCode) {
+    const { fullName, phone, street, city, state, country } = shippingAddress;
+    if (!fullName || !phone || !street || !city || !state) {
       return res.status(400).json({
         success: false,
         message: 'Complete shipping address required',
         data: null
       });
     }
+    const shippingAddressSnapshot = {
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      street: street.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      country: country?.trim() || 'Nigeria',
+    };
 
     // Validate payment method
     const validMethods = ['credit_card', 'bank_transfer', 'cash_on_delivery'];
@@ -320,146 +344,80 @@ const createOrder = async (req, res) => {
     }
 
     // ========== STEP 2: GET AND VALIDATE CART ==========
-    const cart = await Cart.findOne({ userId });
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cart is empty',
-        data: null
-      });
-    }
-
-    const validatedItems = [];
-    const itemsByVendor = {}; // Group by vendor later
-
-    for (const cartItem of cart.items) {
-      // Get product
-      const product = await Product.findById(cartItem.productId);
-      if (!product) {
-        return res.status(400).json({
-          success: false,
-          message: `Product not found`,
-          data: null
-        });
-      }
-
-      // Check product is active
-      if (!product.isActive) {
-        return res.status(400).json({
-          success: false,
-          message: `${product.name} is no longer available`,
-          data: null
-        });
-      }
-
-      // Get vendor
-      const vendor = await Shop.findById(product.vendor);
-      if (!vendor) {
-        return res.status(400).json({
-          success: false,
-          message: `Vendor for ${product.name} not found`,
-          data: null
-        });
-      }
-
-      // Check vendor is active
-      if (!vendor.isActive) {
-        return res.status(400).json({
-          success: false,
-          message: `${vendor.name} is no longer active`,
-          data: null
-        });
-      }
-
-      // Check stock
-      if (product.stock < cartItem.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `${product.name} only has ${product.stock} available`,
-          data: null
-        });
-      }
-
-      // All validations passed for this item
-      validatedItems.push({
-        cartItem,
-        product,
-        vendor
-      });
-    }
-
-    for (const item of validatedItems) {
-      const vendorId = item.vendor._id.toString();
-
-      if (!itemsByVendor[vendorId]) {
-        itemsByVendor[vendorId] = {
-          vendor: item.vendor,
-          items: []
-        };
-      }
-
-      itemsByVendor[vendorId].items.push(item);
-    }
-
+    session = await mongoose.startSession();
     const createdOrders = [];
-    const stockUpdates = []; // Track all stock updates
 
-    for (const [vendorId, vendorData] of Object.entries(itemsByVendor)) {
-      // Calculate total amount for this vendor's order
-      const totalAmount = vendorData.items.reduce(
-        (sum, item) => sum + (item.cartItem.price * item.cartItem.quantity),
-        0
-      );
+    await session.withTransaction(async () => {
+      createdOrders.length = 0;
+      const cart = await Cart.findOne({ userId }).session(session);
+      if (!cart || cart.items.length === 0) {
+        const error = new Error('Cart is empty');
+        error.statusCode = 400;
+        throw error;
+      }
 
-      // Create order
-      const order = new Order({
-        customerId: userId,
-        shopId: vendorId,
-        status: 'pending',
-        totalAmount,
-        shippingAddress,
-        paymentMethod,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
+      const itemsByShop = new Map();
+      for (const cartItem of cart.items) {
+        const availableProduct = await getAvailableProduct(cartItem.productId, session);
+        if (!availableProduct) {
+          const error = new Error('A cart product or its vendor is no longer available');
+          error.statusCode = 409;
+          throw error;
+        }
 
-      await order.save();
+        const { product, vendor, shop } = availableProduct;
+        const stockUpdate = await Product.updateOne(
+          { _id: product._id, isActive: true, stock: { $gte: cartItem.quantity } },
+          { $inc: { stock: -cartItem.quantity } },
+          { session }
+        );
+        if (stockUpdate.modifiedCount !== 1) {
+          const error = new Error(`${product.name} no longer has enough stock`);
+          error.statusCode = 409;
+          throw error;
+        }
 
-      // Create order items for this vendor
-      for (const item of vendorData.items) {
-        const orderItem = new OrderItem({
-          orderId: order._id,
-          productId: item.cartItem.productId,
-          quantity: item.cartItem.quantity,
-          priceAtPurchase: item.cartItem.price
+        const shopId = shop._id.toString();
+        if (!itemsByShop.has(shopId)) {
+          itemsByShop.set(shopId, { shop, vendor, items: [] });
+        }
+        itemsByShop.get(shopId).items.push({ cartItem, product });
+      }
+
+      for (const { shop, vendor, items } of itemsByShop.values()) {
+        const totalAmount = items.reduce(
+          (sum, { product, cartItem }) => sum + product.price * cartItem.quantity,
+          0
+        );
+        const order = new Order({
+          customerId: userId,
+          shopId: shop._id,
+          status: 'pending',
+          totalAmount,
+          shippingAddress: shippingAddressSnapshot,
+          paymentMethod,
         });
+        await order.save({ session });
 
-        await orderItem.save();
+        for (const { product, cartItem } of items) {
+          await new OrderItem({
+            orderId: order._id,
+            productId: product._id,
+            quantity: cartItem.quantity,
+            priceAtPurchase: product.price,
+          }).save({ session });
+        }
 
-        // Track stock update
-        stockUpdates.push({
-          productId: item.product._id,
-          quantity: item.cartItem.quantity
+        createdOrders.push({
+          orderId: order._id,
+          vendorName: vendor.name,
+          totalAmount,
+          itemCount: items.length,
         });
       }
 
-      createdOrders.push({
-        orderId: order._id,
-        vendorName: item.vendor.name,
-        totalAmount,
-        itemCount: vendorData.items.length
-      });
-    }
-
-    for (const update of stockUpdates) {
-      await Product.findByIdAndUpdate(
-        update.productId,
-        { $inc: { stock: -update.quantity } },
-        { new: true }
-      );
-    }
-
-    await Cart.deleteOne({ userId });
+      await Cart.deleteOne({ userId }, { session });
+    });
 
     res.status(201).json({
       success: true,
@@ -471,11 +429,13 @@ const createOrder = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(error.statusCode || 500).json({
       success: false,
       message: error.message,
       data: null
     });
+  } finally {
+    if (session) await session.endSession();
   }
 };
 
@@ -542,7 +502,7 @@ const getOrderDetails = async (req, res) => {
     // Get order items with product details
     const orderItems = await OrderItem.find({ orderId }).populate({
       path: 'productId',
-      select: 'name image price'
+      select: 'name images'
     });
 
     // Combine order + items
