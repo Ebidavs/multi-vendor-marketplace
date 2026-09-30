@@ -20,7 +20,9 @@ exports.updateProfile = async (req, res) => {
 
     if(!user){
       return res.status(400).json({
-        message: 'User not found'
+        success: false,
+        message: 'User not found',
+        data: null
       })
     }
 
@@ -34,7 +36,8 @@ exports.updateProfile = async (req, res) => {
     console.log(err)
     return res.status(500).json({
       success: false,
-      message: "Something went wrong, please try again"
+      message: "Something went wrong, please try again",
+      data: null
     });
   }
 }
@@ -44,6 +47,7 @@ exports.getProfile = async (req, res) => {
   try {
     return res.status(200).json({
       success: true,
+      message: "Request successful",
       data: req.user,
     });
   } catch (err) {
@@ -51,13 +55,14 @@ exports.getProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Something went wrong, please try again',
+      data: null
     });
   }
 };
 
 
 //assuming that products created by vendor is 
-exports.deleteProfile = async (req, res) => {
+exports.deleteAccount = async (req, res) => {
   try{
     
     const id = req.user.id;
@@ -67,39 +72,100 @@ exports.deleteProfile = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Admin accounts cannot be self-deleted. Contact another admin to remove your account.',
+        data: null
       });
     }
 
-    if (role === 'vendor') {
-      // vendor - soft delete — preserve the record so products added will be always be linked to a vendor account
-      const user = await User.findByIdAndUpdate(
-        id, 
-        { isActive: false }, 
-        { new: true });
+      // - soft delete — preserve the record so products added will be always be linked to a vendor account
+    const user = await User.findByIdAndUpdate(
+      id, 
+      { isActive: false, deletedAt: new Date() }, 
+      { new: true }
+    );
 
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
+    // TODO: once Address/Review/Product/Shop models are integrated,
+    // cascade isActive: false to all records referencing this user's _id
+    // (pending final field names/structure from Dev 4)
 
-      return res.status(200).json({ success: true, message: 'Vendor account deactivated' });
-    }
-
-    // customers — hard delete
-    const user = await User.findByIdAndDelete(id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found', 
+        data: null });
     }
-    return res.status(200).json({ success: true, message: 'Account deleted successfully' });
+
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Account deleted successfully', 
+      data: null});
+    
+
+   
 
 
   } catch(err){
     console.log(err)
     return res.status(500).json({
       success: false,
-      message: "Something went wrong, please try again"
+      message: "Something went wrong, please try again",
+      data: null
     });
   }
 }
+
+
+
+exports.deactivateAccount = async (req, res) => {
+  try {
+    const id = req.user.id;
+    const role = req.user.role;
+
+    if (role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Admin accounts cannot be self-deactivated. Contact another admin.',
+        data: null,
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true }
+    );
+
+    // TODO: once Address/Review/Product/Shop models are integrated,
+    // cascade isActive: false to all records referencing this user's _id
+    // (pending final field names/structure from Dev 4)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Account deactivated successfully',
+      data: null,
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: 'Something went wrong, please try again',
+      data: null,
+    });
+  }
+};
+
+
+
+
+
 
 
 
@@ -111,15 +177,15 @@ exports.changePassword = async (req, res) => {
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+      return res.status(401).json({ success: false, message: 'Current password is incorrect', data: null});
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    return res.status(200).json({ success: true, message: 'Password updated successfully' });
+    return res.status(200).json({ success: true, message: 'Password updated successfully', data: null });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ success: false, message: 'Something went wrong, please try again' });
+    return res.status(500).json({ success: false, message: 'Something went wrong, please try again', data: null });
   }
 };

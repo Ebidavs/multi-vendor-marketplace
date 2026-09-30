@@ -12,7 +12,9 @@ exports.createAdmin = async (req, res) => {
     if( existingUser ){
       const usedField = existingUser.email === email ? 'Email' : 'Phone Number' 
       return res.status(409).json({
-        message: `An account with this ${usedField} already exist`
+        success: false,
+        message: `An account with this ${usedField} already exist`,
+        data: null
       })
     }
         
@@ -32,6 +34,7 @@ exports.createAdmin = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Something went wrong, please try again',
+      data: null
     });
   }
 };

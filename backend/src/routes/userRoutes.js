@@ -19,6 +19,8 @@ router.put('/change-Password', protect, validator(changePasswordSchema), userCon
 
 router.get('/me', protect, userController.getProfile)
 
-router.delete('/me', protect, userController.deleteProfile)
+router.delete('/delete-account', protect, userController.deleteAccount)
+
+router.put('/deactivate-account', protect, userController.deactivateAccount)
 
 module.exports = router;

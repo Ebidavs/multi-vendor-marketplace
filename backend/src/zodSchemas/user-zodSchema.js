@@ -28,7 +28,6 @@ const baseFields = {
 const createCustomerSchema = z.object({
   ...baseFields,
   role: z.literal('customer'),
-  address: z.string({ invalid_type_error: 'Address must be a string' }).optional(),
 }).strict();
 
 const createVendorSchema = z.object({
@@ -42,11 +41,6 @@ const createVendorSchema = z.object({
    .string({ required_error: 'Business description is required', invalid_type_error: 'Business description must be a string' })
     .trim()
     .min(5, { message: 'Business description must be at least 5 characters' }),
-  businessAddress: z
-    .string({ required_error: 'Business address is required', invalid_type_error: 'Business address must be a string' })
-    .trim()
-    .min(10, { message: 'Business address must be at least 5 characters' }),
-
   bankDetails: z.object({
     accountNumber: z
       .string({ required_error: 'Account number is required', invalid_type_error: 'Account number must be a string' })
@@ -72,12 +66,12 @@ const createUserSchema = z.discriminatedUnion('role', [
 
 //schema to validate incoming update request
 const updateCustomerSchema = createCustomerSchema
-  .omit({ role: true })
+  .omit({ role: true, password: true })
   .partial()
   .strict();
 
 const updateVendorSchema = createVendorSchema
-  .omit({ role: true })
+  .omit({ role: true, password: true })
   .partial()
   .strict();
 

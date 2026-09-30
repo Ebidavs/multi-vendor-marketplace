@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  deletedAt: { 
+    type: Date, 
+    default: null 
+  }
 },
 
   { 
@@ -34,11 +38,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-const Customer = User.discriminator('customer', new mongoose.Schema({
-  address: {
-    type: String
-  }
-}));
+const Customer = User.discriminator('customer', new mongoose.Schema({}));
 
 const Vendor = User.discriminator('vendor', new mongoose.Schema({
   businessName: {
@@ -48,10 +48,6 @@ const Vendor = User.discriminator('vendor', new mongoose.Schema({
   businessDescription: {
     type: String,
     required: true
-  },
-  businessAddress: {
-    type: String,
-    required: true,
   },
   bankDetails: {
     accountNumber: { type: String },
