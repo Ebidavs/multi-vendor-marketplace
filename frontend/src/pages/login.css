@@ -1,0 +1,117 @@
+.login-page {
+    min-height: 100vh;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+.login-card {
+    width:100%;
+    max-width: 500px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 40px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 28px rgba(0, 0, 0, 0.08);
+}
+.login-brand {
+    text-align: center;
+    margin-bottom: 25px;
+
+}
+.login-brand h1 {
+    margin: 0;
+    color: #198754;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+.login-card h2 {
+    margin: 0 0 8px;
+    color: #1f2937;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+.login-subtitle {
+    margin: 0 0 28px;
+    color: #6b7280;
+    font-size: 15px;
+}
+.login-field {
+    margin-bottom: 20px;
+}
+.login-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #1f2937;
+    font-size: 15px;
+    font-weight: 600;
+
+}
+.login-field input {
+    width: 100%;
+    padding:  14px 15px;
+    border: 1px solid #bdbdbd;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #1f2937;
+    font-size: 15px;
+    box-sizing: border-box;
+    outline: none;
+
+
+}
+.login-field input:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0,12);
+}
+.login-field input::placeholder{
+    color: #9ca3af;
+}
+.forgot-link {
+    text-align: right;
+    margin-top: -8px;
+    margin-bottom: 22px;
+}
+.forgot-link a {
+    color: #198754;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+.forgot-link a:hover {
+    text-decoration: underline;
+}
+.login-button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    background-color: #198754;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.login-button:hover {
+    background-color: #146c43;
+}
+.register-text {
+    text-align: center;
+    margin: 24px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+.register-text a  {
+    color: #198754;
+    text-decoration: none;
+    font-weight: 600;
+}
+.register-text a:hover{
+    text-decoration: underline;
+}

@@ -1,7 +1,11 @@
 import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
-import Products from "./pages/products";
+import Login from "./pages/login";
+import Register from "./pages/register";
+import ForgotPassword from "./pages/forgot-password";
+
+// Vendor Pages
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProducts from "./pages/vendor/VendorProducts";
 import AddProduct from "./pages/vendor/AddProduct";
@@ -12,6 +16,8 @@ import VendorAnalytics from "./pages/vendor/VendorAnalytics";
 import VendorStoreProfile from "./pages/vendor/VendorStoreProfile";
 import VendorReviews from "./pages/vendor/VendorReviews";
 import VendorSettings from "./pages/vendor/VendorSettings";
+
+// Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminVendors from "./pages/admin/AdminVendors";
@@ -24,16 +30,23 @@ import AdminSettings from "./pages/admin/AdminSettings";
 function App() {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      <Route path="/products" element={<Products />} />
-
+      {/* Vendor Routes */}
       <Route path="/vendor" element={<VendorDashboard />} />
 
       <Route path="/vendor/products" element={<VendorProducts />} />
+
       <Route path="/vendor/products/add" element={<AddProduct />} />
+
       <Route path="/vendor/orders" element={<VendorOrders />} />
+
       <Route path="/vendor/orders/:orderId" element={<VendorOrderDetails />} />
+
       <Route path="/vendor/customers" element={<VendorCustomers />} />
 
       <Route path="/vendor/analytics" element={<VendorAnalytics />} />
@@ -43,6 +56,8 @@ function App() {
       <Route path="/vendor/reviews" element={<VendorReviews />} />
 
       <Route path="/vendor/settings" element={<VendorSettings />} />
+
+      {/* Admin Routes */}
       <Route path="/admin" element={<AdminDashboard />} />
 
       <Route path="/admin/users" element={<AdminUsers />} />
