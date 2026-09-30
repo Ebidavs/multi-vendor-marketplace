@@ -12,18 +12,37 @@ exports.createCategory = async (req, res, next) => {
 exports.getCategories = async (req, res, next) => {
   const categories = await Category.find().sort({ name: 1 });
 
-  // categories are usually a small, fixed list, so counting per category
-  // like this stays fast. if that list grows into the hundreds, switch to
-  // one Product.aggregate grouped by category instead
-
-  const categoriesWithCount = await Promise.all(
-    categories.map(async (category) => {
-      const productCount = await Product.countDocuments({
-        category: category._id,
+  const productCounts = await Product.aggregate([
+    {
+      $match: {
+        category: { $in: categories.map((category) => category._id) },
         isActive: true,
-      });
-      return formatCategory(category, productCount);
-    })
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'vendor',
+        foreignField: '_id',
+        as: 'vendor',
+      },
+    },
+    { $unwind: '$vendor' },
+    {
+      $match: {
+        'vendor.role': 'vendor',
+        'vendor.isActive': true,
+        'vendor.deletedAt': null,
+      },
+    },
+    { $group: { _id: '$category', count: { $sum: 1 } } },
+  ]);
+
+  const productCountByCategory = new Map(
+    productCounts.map(({ _id, count }) => [_id.toString(), count])
+  );
+  const categoriesWithCount = categories.map((category) =>
+    formatCategory(category, productCountByCategory.get(category.id) || 0)
   );
 
   sendSuccess(res, 200, 'Categories fetched successfully', categoriesWithCount);
