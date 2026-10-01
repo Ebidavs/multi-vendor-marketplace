@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-
 import Home from "./pages/Home";
 import Products from "./pages/products";
-
+import OrderHistoryPage from "./pages/OrderHistoryPage";
+import OrderTrackingPage from "./pages/OrderTrackingPage";
 import Navbar from "./components/Navbar";
 import SearchBar from "./components/SearchBar";
 import CategoryBar from "./components/CategoryBar";
@@ -218,6 +218,8 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/products" element={marketplacePage} />
         <Route path="/marketplace" element={marketplacePage} />
+        <Route path="/orders" element={<OrderHistoryPage />} />
+        <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
         <Route
           path="/cart"
           element={
