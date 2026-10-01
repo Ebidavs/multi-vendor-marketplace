@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 
-const requiredEnvVars = ['JWT_SECRET', 'EXPIRES_IN', 'MONGO_URI', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'APP_NAME'];
+const requiredEnvVars = ['JWT_SECRET', 'EXPIRES_IN'];
 const missing = requiredEnvVars.filter((key) => !process.env[key]);
 
 if (missing.length > 0) {
@@ -18,7 +18,7 @@ const productRoutes = require('./routes/productRoutes');
 
 const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
-const adminRoutes =  require('./routes/adminRoutes');
+
 
 const app = express();
 
@@ -33,7 +33,7 @@ app.use('/api/v1/products', productRoutes);
 
 app.use('/api/v1/auth', authRoutes);       // Backend Dev 1
 app.use('/api/v1/user', userRoutes);       // Backend Dev 1
-app.use('/api/v1/admin', adminRoutes);     // Backend Dev 1 to be extended by backend dev 4
+
 // app.use('/api/v1/cart', require('./routes/cartRoutes'));       // Backend Dev 3
 // app.use('/api/v1/orders', require('./routes/orderRoutes'));    // Backend Dev 3
 // app.use('/api/v1/shops', require('./routes/shopRoutes'));      // Backend Dev 4

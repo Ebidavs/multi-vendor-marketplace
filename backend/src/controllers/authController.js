@@ -159,7 +159,7 @@ exports.generateOtp = async (req, res) => {
 
     await Otp.deleteMany({ email, purpose });
     const otpRecord = new Otp({ email, otp: hashedOtp, purpose, expiresAt });
-    otpRecord.save()
+    await otpRecord.save()
 
     const subject = purpose === 'password-reset'
       ? 'Your password reset code'

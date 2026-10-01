@@ -6,6 +6,29 @@ exports.updateProfile = async (req, res) => {
     const id  = req.user.id;
     const updates = req.body;
 
+    if (updates.email || updates.phoneNumber) {
+      const existingUser = await User.findOne({
+        _id: { $ne: id },
+        $or: [
+          ...(updates.email ? [{ email: updates.email.toLowerCase().trim() }] : []),
+          ...(updates.phoneNumber ? [{ phoneNumber: updates.phoneNumber }] : []),
+        ],
+      });
+
+      if (existingUser) {
+        const usedField = existingUser.email === updates.email ? 'Email' : 'Phone number';
+        return res.status(409).json({
+          success: false,
+          message: `${usedField} is already in use by another account`,
+          data: null,
+        });
+      }
+    }
+
+    if (updates.email) {
+      updates.email = updates.email.toLowerCase().trim();
+    }
+
     // const Model = req.user.role === 'customer'? Customer: Vendor
     let Model;
     if (req.user.role === 'vendor') Model = Vendor;

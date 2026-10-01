@@ -12,6 +12,10 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendEmail = async ({ to, subject, text, html }) => {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error('Email service is not configured (missing SMTP_USER/SMTP_PASS)');
+  }
+  
   await transporter.sendMail({
   from: `"${process.env.APP_NAME || 'Marketplace'}" <${process.env.SMTP_USER}>`,
   to,

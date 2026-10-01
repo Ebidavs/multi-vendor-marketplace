@@ -15,7 +15,7 @@ async function seed() {
       process.exit();
     }
 
-    const hashedPassword = await bcrypt.hash('ChangeMe123!', 10);
+    const hashedPassword = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, 10);
 
     const admin = new Admin({
       name: 'Super Admin',
