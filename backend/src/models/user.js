@@ -1,50 +1,66 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-// Temporary minimal User model, pending Backend Dev 1's full auth
-// implementation. Only the fields other domains need to reference (role
-// checks, ownership, vendor/admin authorization) are defined here.
-// Registration, login, and password hashing belong to Backend Dev 1.
-const userSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: [true, 'Name is required'],
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: [true, 'Email is required'],
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: [true, 'Password is required'],
-      select: false,
-    },
-    role: {
-      type: String,
-      enum: ['customer', 'vendor', 'admin'],
-      default: 'customer',
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+const userSchema = new mongoose.Schema({
+
+  name: { 
+    type: String, 
+    required: true
   },
-  { timestamps: true }
+  email: { 
+    type: String,
+    required: true,
+    unique: true
+  },
+  phoneNumber: {
+    type: String,
+    required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    select: false
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  deletedAt: { 
+    type: Date, 
+    default: null 
+  }
+},
+
+  { 
+    discriminatorKey: 'role', 
+    timestamps: true 
+  }
 );
 
-userSchema.virtual('id').get(function () {
-  return this._id.toString();
-});
+const User = mongoose.model('User', userSchema);
 
-userSchema.set('toJSON', {
-  transform: (doc, ret) => {
-    delete ret.password;
-    return ret;
+const Customer = User.discriminator('customer', new mongoose.Schema({}));
+
+const Vendor = User.discriminator('vendor', new mongoose.Schema({
+  businessName: {
+    type: String,
+    required: true
   },
-});
+  businessDescription: {
+    type: String,
+    required: true
+  },
+  bankDetails: {
+    accountNumber: { type: String },
+    accountName: { type: String },
+    bankName: { type: String },
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  
+}));
 
-module.exports = mongoose.model('User', userSchema);
+const Admin = User.discriminator('admin', new mongoose.Schema({}));
+
+module.exports = { User, Customer, Vendor, Admin};

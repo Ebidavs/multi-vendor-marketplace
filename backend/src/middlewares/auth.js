@@ -1,48 +1,66 @@
 const jwt = require('jsonwebtoken');
-const userModel = require('../models/user');
-const { resolveUserModel } = require('../utils/modelCompat');
-const AppError = require('../utils/appError');
+const { User } = require('../models/user');
 
-const User = resolveUserModel(userModel);
-
-// Temporary JWT auth guard, pending Backend Dev 1's full auth
-// implementation. Verifies a bearer token and attaches the user to
-// req.user so other domains (products, shops, orders, etc.) can rely on
-// req.user.id / req.user.role today.
-exports.protect = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next(new AppError('You are not logged in. Please log in to get access.', 401));
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  let decoded;
+const protect = async (req, res, next) => {
   try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing bearer token',
+        data: null,
+      });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.deletedAt) {
+      return res.status(401).json({
+        success: false,
+        message: 'User no longer exists',
+        data: null,
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account has been deactivated',
+        data: null,
+      });
+    }
+
+    req.user = user;
+    return next();
   } catch (err) {
-    return next(new AppError('Invalid or expired token', 401));
-  }
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token',
+        data: null,
+      });
+    }
 
-  const user = await User.findById(decoded.id);
-  if (!user) {
-    return next(new AppError('The user belonging to this token no longer exists', 401));
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: 'Something went wrong, please try again',
+      data: null,
+    });
   }
+};
 
-  if (!user.isActive) {
-    return next(new AppError('Your account has been deactivated', 403));
+const restrictTo = (...allowedRoles) => (req, res, next) => {
+  if (!allowedRoles.includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: 'You do not have permission to perform this action',
+      data: null,
+    });
   }
-
-  req.user = user;
   next();
 };
 
-exports.restrictTo = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return next(new AppError('You do not have permission to perform this action', 403));
-    }
-    next();
-  };
-};
+module.exports = { protect, restrictTo };
