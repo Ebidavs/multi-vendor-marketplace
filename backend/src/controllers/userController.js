@@ -1,5 +1,6 @@
 const { User, Customer, Vendor, Admin}  = require('../models/user')
 const bcrypt = require('bcryptjs')
+const { setRelatedResourcesActive } = require('../utils/accountLifecycle');
 
 exports.updateProfile = async (req, res) => {
   try{
@@ -100,32 +101,25 @@ exports.deleteAccount = async (req, res) => {
     }
 
       // - soft delete — preserve the record so products added will be always be linked to a vendor account
-    const user = await User.findByIdAndUpdate(
-      id, 
-      { isActive: false, deletedAt: new Date() }, 
-      { new: true }
-    );
-
-    // TODO: once Address/Review/Product/Shop models are integrated,
-    // cascade isActive: false to all records referencing this user's _id
-    // (pending final field names/structure from Dev 4)
-
+    const user = await User.findById(id);
     if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found', 
-        data: null });
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        data: null,
+      });
     }
 
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Account deleted successfully', 
-      data: null});
-    
+    await setRelatedResourcesActive(user, false);
+    user.isActive = false;
+    user.deletedAt = new Date();
+    await user.save();
 
-   
-
-
+    return res.status(200).json({
+      success: true,
+      message: 'Account deleted successfully',
+      data: null,
+    });
   } catch(err){
     console.log(err)
     return res.status(500).json({
@@ -151,16 +145,7 @@ exports.deactivateAccount = async (req, res) => {
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true }
-    );
-
-    // TODO: once Address/Review/Product/Shop models are integrated,
-    // cascade isActive: false to all records referencing this user's _id
-    // (pending final field names/structure from Dev 4)
-
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -168,6 +153,19 @@ exports.deactivateAccount = async (req, res) => {
         data: null,
       });
     }
+
+    if (user.deletedAt) {
+      return res.status(400).json({
+        success: false,
+        message: 'Deleted accounts cannot be deactivated or reactivated',
+        data: null,
+      });
+    }
+
+    await setRelatedResourcesActive(user, false);
+    user.isActive = false;
+    user.deletedAt = null;
+    await user.save();
 
     return res.status(200).json({
       success: true,

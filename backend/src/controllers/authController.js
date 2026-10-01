@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 const { Otp } = require('../models/otp');
 const { sendEmail } = require('../config/mailerConfig');
 const { verifyOtpHelper, generateOtpCode, OTP_EXPIRY_MINUTES} = require('../utils/otpHelper');
+const { setRelatedResourcesActive } = require('../utils/accountLifecycle');
 
 
 exports.register = async (req, res) => {
@@ -262,6 +263,11 @@ exports.activateAccount = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP', data: null });
     }
 
+    if (user.isActive) {
+      return res.status(400).json({ success: false, message: 'Account is already active', data: null });
+    }
+
+    await setRelatedResourcesActive(user, true);
     user.isActive = true;
     await user.save();
     await Otp.deleteOne({ _id: result.record._id });
