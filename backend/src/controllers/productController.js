@@ -1,13 +1,15 @@
+const userModel = require('../models/user');
 const Product = require('../models/product');
 const Category = require('../models/category');
 const AppError = require('../utils/appError');
 const sendSuccess = require('../utils/response');
 const uploadBufferToCloudinary = require('../utils/uploadToCloudinary');
 const deleteFromCloudinary = require('../utils/deleteFromCloudinary');
-const {
-  formatProductSummary,
-  formatProductDetail,
-} = require('../utils/formatProduct');
+const { formatProductSummary, formatProductDetail } = require('../utils/formatProduct');
+const { resolveUserModel } = require('../utils/modelCompat');
+const { getProductPagination, getEmptyProductResult } = require('../utils/productPagination');
+
+const User = resolveUserModel(userModel);
 
 const SORT_OPTIONS = {
   newest: '-createdAt',
@@ -88,34 +90,52 @@ exports.createProduct = async (req, res, next) => {
 
   product.category = categoryExists;
 
-  sendSuccess(
-    res,
-    201,
-    'Product created successfully',
-    formatProductDetail(product)
-  );
+  sendSuccess(res, 201, 'Product created successfully', formatProductDetail(product));
 };
 
 exports.getProducts = async (req, res, next) => {
-  const {
-    category,
-    minPrice,
-    maxPrice,
-    minRating,
-    inStock,
-    search,
-    sort,
-    vendor,
-  } = req.query;
+  const { category, minPrice, maxPrice, minRating, inStock, search, sort, vendor } = req.query;
+  const { page, limit, skip } = getProductPagination(req.query);
 
   const filter = { isActive: true };
 
+  const activeVendorIds = await User.find({
+    role: 'vendor',
+    isActive: true,
+    deletedAt: null,
+  }).distinct('_id');
+  if (activeVendorIds.length === 0) {
+    return sendSuccess(
+      res,
+      200,
+      'Products fetched successfully',
+      getEmptyProductResult({ page, limit })
+    );
+  }
+
   if (category) filter.category = category;
-  if (vendor) filter.vendor = vendor;
+  if (vendor) {
+    const vendorUser = await User.findOne({
+      _id: vendor,
+      role: 'vendor',
+      isActive: true,
+      deletedAt: null,
+    });
+    if (!vendorUser) {
+      return sendSuccess(
+        res,
+        200,
+        'Products fetched successfully',
+        getEmptyProductResult({ page, limit })
+      );
+    }
+    filter.vendor = vendor;
+  } else {
+    filter.vendor = { $in: activeVendorIds };
+  }
 
   if (minPrice || maxPrice) {
     filter.price = {};
-
     if (minPrice) filter.price.$gte = Number(minPrice);
     if (maxPrice) filter.price.$lte = Number(maxPrice);
   }
@@ -138,16 +158,9 @@ exports.getProducts = async (req, res, next) => {
   }
 
   const sortBy = SORT_OPTIONS[sort] || SORT_OPTIONS.newest;
-  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 12));
-  const skip = (page - 1) * limit;
 
   const [products, total] = await Promise.all([
-    Product.find(filter)
-      .sort(sortBy)
-      .skip(skip)
-      .limit(limit)
-      .populate('category', 'name'),
+    Product.find(filter).sort(sortBy).skip(skip).limit(limit).populate('category', 'name'),
     Product.countDocuments(filter),
   ]);
 
@@ -163,19 +176,33 @@ exports.getProducts = async (req, res, next) => {
 };
 
 exports.getProduct = async (req, res, next) => {
-  const product = await Product.findById(req.params.id).populate(
-    'category',
-    'name'
-  );
+  const product = await Product.findById(req.params.id).populate('category', 'name');
 
   if (!product || !product.isActive) {
     return next(new AppError('Product not found', 404));
   }
 
+  const productVendor = await User.findOne({
+    _id: product.vendor,
+    role: 'vendor',
+    isActive: true,
+    deletedAt: null,
+  });
+  if (!productVendor) {
+    return next(new AppError('Product not found', 404));
+  }
+
+  const activeVendorIds = await User.find({
+    role: 'vendor',
+    isActive: true,
+    deletedAt: null,
+  }).distinct('_id');
+
   const relatedProducts = await Product.find({
     category: product.category,
     _id: { $ne: product._id },
     isActive: true,
+    vendor: { $in: activeVendorIds },
   })
     .limit(4)
     .populate('category', 'name');
@@ -196,9 +223,7 @@ exports.updateProduct = async (req, res, next) => {
   }
 
   if (product.vendor.toString() !== req.user.id) {
-    return next(
-      new AppError('You can only update your own products', 403)
-    );
+    return next(new AppError('You can only update your own products', 403));
   }
 
   if (req.body.category !== undefined) {
@@ -213,19 +238,11 @@ exports.updateProduct = async (req, res, next) => {
   let newUploadResults = [];
   if (req.files && req.files.length > 0) {
     newUploadResults = await uploadProductImages(req.files);
-
     product.images = newUploadResults.map((result) => result.secure_url);
     product.imagePublicIds = newUploadResults.map((result) => result.public_id);
   }
 
-  const allowedFields = [
-    'name',
-    'description',
-    'price',
-    'stock',
-    'category',
-  ];
-
+  const allowedFields = ['name', 'description', 'price', 'stock', 'category'];
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
       product[field] = req.body[field];
@@ -251,12 +268,7 @@ exports.updateProduct = async (req, res, next) => {
 
   await product.populate('category', 'name');
 
-  sendSuccess(
-    res,
-    200,
-    'Product updated successfully',
-    formatProductDetail(product)
-  );
+  sendSuccess(res, 200, 'Product updated successfully', formatProductDetail(product));
 };
 
 exports.deleteProduct = async (req, res, next) => {
@@ -267,9 +279,7 @@ exports.deleteProduct = async (req, res, next) => {
   }
 
   if (product.vendor.toString() !== req.user.id) {
-    return next(
-      new AppError('You can only delete your own products', 403)
-    );
+    return next(new AppError('You can only delete your own products', 403));
   }
 
   product.isActive = false;
