@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const userModel = require('../models/user');
 const Review = require('../models/review');
 const Product = require('../models/product');
@@ -6,41 +5,9 @@ const AppError = require('../utils/appError');
 const sendSuccess = require('../utils/response');
 const formatReview = require('../utils/formatReview');
 const { resolveUserModel } = require('../utils/modelCompat');
+const { recalculateProductRating } = require('../utils/productRating');
 
 const User = resolveUserModel(userModel);
-
-const recalculateProductRating = async (productId) => {
-  const productObjectId = mongoose.Types.ObjectId.isValid(productId)
-    ? new mongoose.Types.ObjectId(productId)
-    : productId;
-  const activeCustomerIds = await User.find({
-    role: 'customer',
-    isActive: true,
-    deletedAt: null,
-  }).distinct('_id');
-
-  const stats = await Review.aggregate([
-    {
-      $match: {
-        product: productObjectId,
-        isActive: true,
-        user: { $in: activeCustomerIds },
-      },
-    },
-    {
-      $group: {
-        _id: '$product',
-        avgRating: { $avg: '$rating' },
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  await Product.findByIdAndUpdate(productObjectId, {
-    ratingsAverage: stats.length > 0 ? Math.round(stats[0].avgRating * 10) / 10 : 0,
-    ratingsCount: stats.length > 0 ? stats[0].count : 0,
-  });
-};
 
 exports.createReview = async (req, res, next) => {
   const { product: productId, rating, comment } = req.body;

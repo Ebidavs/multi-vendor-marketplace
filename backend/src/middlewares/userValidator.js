@@ -8,6 +8,7 @@ const validator = (schema, source = 'body') => (req, res, next) => {
     return res.status(400).json({
       success: false,
       message: 'Input data did not pass validation',
+      data: null,
       errors: result.error.issues.map((err) => {
         return {
           path: err.path.join('.'),

@@ -15,6 +15,11 @@ async function seed() {
       process.exit();
     }
 
+    if (!process.env.SEED_ADMIN_PASSWORD) {
+      console.error('SEED_ADMIN_PASSWORD is not set — cannot seed the first admin');
+      process.exit(1);
+    }
+
     const hashedPassword = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, 10);
 
     const admin = new Admin({

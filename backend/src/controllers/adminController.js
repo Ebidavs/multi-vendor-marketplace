@@ -5,6 +5,7 @@ const Product = require('../models/product');
 const AppError = require('../utils/appError');
 const sendSuccess = require('../utils/response');
 const { resolveUserModel } = require('../utils/modelCompat');
+const { setRelatedResourcesActive } = require('../utils/accountLifecycle');
 
 const SafeUser = resolveUserModel(userModel);
 const Admin = userModel.Admin || SafeUser.discriminators?.Admin || SafeUser;
@@ -129,7 +130,7 @@ exports.updateVendorStatus = async (req, res, next) => {
   vendor.isActive = isActive;
   await vendor.save();
 
-  await Shop.findOneAndUpdate({ owner: vendor.id }, { isActive });
+  await setRelatedResourcesActive(vendor, isActive);
 
   sendSuccess(res, 200, `Vendor ${isActive ? 'activated' : 'deactivated'} successfully`, {
     id: vendor.id,
