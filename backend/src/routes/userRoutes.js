@@ -15,7 +15,7 @@ const userController = require('../controllers/userController')
 
 router.put('/update-profile', protect, updateValidator, userController.updateProfile)
 
-router.put('/change-Password', protect, validator(changePasswordSchema), userController.changePassword)
+router.put('/change-password', protect, validator(changePasswordSchema), userController.changePassword)
 
 router.get('/me', protect, userController.getProfile)
 

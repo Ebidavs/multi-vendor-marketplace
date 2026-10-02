@@ -582,7 +582,7 @@ for uniqueness against other accounts.
 }
 ```
 
-### `PUT /api/v1/user/change-Password`
+### `PUT /api/v1/user/change-password`
 
 **Description:** Changes the authenticated user's password after verifying the current
 password.
@@ -590,8 +590,6 @@ password.
 **Authentication:** Required
 
 **Role:** Any authenticated role
-
-> The route path is literally `change-Password` (capital `P`).
 
 #### Request Body
 
@@ -1222,8 +1220,8 @@ as `GET /api/v1/shops/:id`.
 
 ## 7. Cart
 
-The cart is per customer and requires a customer token. All cart routes are mounted at
-the API root (`/api/v1/cart...`) via the order router.
+The cart is per customer and requires a customer token. All cart routes are served by
+`backend/src/routes/cartRoutes.js`, mounted at `/api/v1/cart`.
 
 ### `GET /api/v1/cart`
 
@@ -2358,10 +2356,11 @@ Variable **names** only. Values are never shown. Provide them in `backend/.env`
 `JWT_SECRET` and `EXPIRES_IN` are validated at startup. Missing SMTP configuration does
 not prevent the server from starting; it only affects sending OTP emails.
 
-> ⚠️ **Flagged for team decision (not changed):** the route path
-> `PUT /api/v1/user/change-Password` uses a capital `P`, unlike the rest of the API
-> (lower-case/kebab-case). It is documented above exactly as implemented. Renaming it
-> would be a breaking API change, so it was left as-is.
+> **Corrected during the cleanup pass:** this path previously used an accidental capital
+> `P` (`change-Password`). Express matches route paths case-insensitively by default, so
+> both spellings resolve to the same route. It has been normalized to lower-case
+> `change-password` for consistency with the rest of the API, and this document now
+> reflects that.
 
 > ⚠️ **Flagged for team decision (not changed):** the Cart/Order schema uses `userId`,
 > `customerId`, `productId`, and `shopId`, while `Product` uses the bare field `vendor`.

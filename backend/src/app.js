@@ -19,7 +19,9 @@ const productRoutes = require('./routes/productRoutes');
 const shopRoutes = require('./routes/shopRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const vendorRoutes = require('./routes/vendorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
@@ -34,7 +36,9 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/shops', shopRoutes);
 app.use('/api/v1/addresses', addressRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
-app.use('/api/v1', orderRoutes);
+app.use('/api/v1/cart', cartRoutes);
+app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/vendors', vendorRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
 // Unmatched routes return the shared error envelope instead of the default HTML page.
