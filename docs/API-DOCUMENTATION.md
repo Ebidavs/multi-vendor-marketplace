@@ -2356,13 +2356,3 @@ Variable **names** only. Values are never shown. Provide them in `backend/.env`
 `JWT_SECRET` and `EXPIRES_IN` are validated at startup. Missing SMTP configuration does
 not prevent the server from starting; it only affects sending OTP emails.
 
-> **Corrected during the cleanup pass:** this path previously used an accidental capital
-> `P` (`change-Password`). Express matches route paths case-insensitively by default, so
-> both spellings resolve to the same route. It has been normalized to lower-case
-> `change-password` for consistency with the rest of the API, and this document now
-> reflects that.
-
-> ⚠️ **Flagged for team decision (not changed):** the Cart/Order schema uses `userId`,
-> `customerId`, `productId`, and `shopId`, while `Product` uses the bare field `vendor`.
-> These are existing persisted field names; renaming them would break stored data and the
-> public contract, so they were documented as-is.

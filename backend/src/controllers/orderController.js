@@ -571,9 +571,9 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Update status
+    // Update status. The Order schema uses `timestamps: true`, so Mongoose
+    // maintains createdAt/updatedAt on save(); no manual timestamp is needed.
     order.status = status;
-    order.updatedAt = new Date();
     await order.save();
 
     res.status(200).json({

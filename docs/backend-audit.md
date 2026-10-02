@@ -291,7 +291,7 @@ APP_NAME
 Used by tooling / scripts:
 
 ```
-TEST_MONGODB_URI     # integration tests (not present in .env.example)
+TEST_MONGODB_URI     # integration tests (present in .env.example)
 SEED_ADMIN_PASSWORD  # utils/seedAdmin.js (present in .env.example, not in local .env)
 ```
 
@@ -316,133 +316,141 @@ Notes:
   - `tests/account-lifecycle.integration.test.js` — MongoDB integration (1 test).
   - `tests/vendor-status.integration.test.js` — MongoDB integration (3 tests).
   - `tests/endpoint-tests.md` — manual endpoint notes (not executable).
-- **Result of a run in this environment:**
+- **Result of a run in this environment** (with `TEST_MONGODB_URI` pointing at the local
+  MongoDB on `127.0.0.1:27017`):
 
   | Metric | Count |
   | --- | --- |
-  | Passed | 5 |
+  | Passed | 9 |
   | Failed | 0 |
-  | Skipped | 4 |
+  | Skipped | 0 |
 
-  Passed: `model-compat`, the three `product-pagination` tests, and
-  `status-boolean-validation`. Skipped: the four MongoDB integration tests.
-
-- **Why tests were skipped:** the integration tests are guarded with
-  `{ skip: !testMongoUri && 'Set TEST_MONGODB_URI ...' }`. `TEST_MONGODB_URI` was not set
-  in this environment. Because MongoDB was unreachable here (see section 11), these tests
-  could not be executed. They were skipped by their own guard, not silently ignored.
+  All nine tests pass, including the four MongoDB integration tests (account-lifecycle
+  cascade, admin vendor status, and product visibility).
+- **Test guard:** the integration tests are guarded with
+  `{ skip: !testMongoUri && 'Set TEST_MONGODB_URI ...' }`. Without `TEST_MONGODB_URI`
+  those four tests skip themselves; they are never silently ignored.
 - **External requirements:** the integration tests require a reachable MongoDB instance
   via `TEST_MONGODB_URI`. The unit tests require no external services.
+- **Not testable in this environment:** checkout uses `startSession()` +
+  `withTransaction()`. The local MongoDB is a standalone instance, which does not support
+  transactions, so checkout is **NOT TESTABLE** here (see section 11).
 
 ## 11. Server Startup
 
 - **Startup command:** `npm start` (`node src/app.js`) or `npm run dev` (nodemon). Both
   use the same entry point.
-- **Observed error:** the process exited with code 1 and printed:
+- **Database used for runtime verification:** the local standalone MongoDB on
+  `127.0.0.1:27017`, supplied to the process as an environment variable. `backend/.env`
+  still carries the Atlas `mongodb+srv://` `MONGO_URI` and was not modified.
+- **Successful startup:** with a reachable MongoDB the process logs `MongoDB connected`
+  and then `Server running on port 5000`. The HTTP server starts only after the database
+  connection resolves (see section 8).
+- **Atlas limitation (environmental, not a code defect):** with the Atlas
+  `mongodb+srv://` URI the process exits with code 1 and printed:
 
   ```
   injected env (13) from .env
   MongoDB connection failed: querySrv ECONNREFUSED _mongodb._tcp.<cluster>.mongodb.net
   ```
 
-- **Root cause:** environmental, not a code defect. The machine's Node process resolves
-  DNS through `127.0.0.1` (a local resolver that is not answering SRV queries), so the
-  SRV lookup that the Atlas `mongodb+srv://` URI requires is refused. An isolated DNS
-  test confirmed the SRV record resolves correctly (3 records) when a public resolver is
-  used, and fails with `ECONNREFUSED` on the default resolver.
+- **Root cause:** the machine's Node process resolves DNS through `127.0.0.1` (a local
+  resolver that is not answering SRV queries), so the SRV lookup that the Atlas
+  `mongodb+srv://` URI requires is refused. An isolated DNS test confirmed the SRV record
+  resolves correctly (3 records) when a public resolver is used, and fails with
+  `ECONNREFUSED` on the default resolver.
 - **Evidence it is not a code problem:** every backend source file passes
-  `node --check` (no syntax errors), and all models load without duplicate-model errors.
-  Startup stops only at the database-connection step.
-- **Fix:** none applied (this is an audit phase). Resolving the local DNS resolver (or
-  configuring the machine to use a working resolver) is the fix required for the server
-  to connect in this environment. This is a local environment issue, not an application
-  bug.
-- **Result:** the server does not reach "Server running on port ..." in this environment
-  solely because the database connection cannot be established.
+  `node --check` (no syntax errors), and the server starts normally against a non-SRV
+  MongoDB URI.
+- **Not changed on purpose:** `MONGO_URI` was left as the Atlas connection string. There
+  is no code-level DNS override, no hardcoded localhost, and no error suppression in the
+  application.
+- **Result:** Atlas is **NOT verified** in this environment. Local MongoDB connects and
+  the server runs on port 5000.
 
 ## 12. Issues Found
 
+Findings are stated as of the current state of the code. Items reported by earlier
+audit passes that have since been corrected are listed under "Resolved".
+
 ### Critical
 
-1. **Account-lifecycle cascade is not exercised by any running test in this environment.**
-   The four MongoDB integration tests that verify cascade behavior are skipped without
-   `TEST_MONGODB_URI`. The cascade logic is the only code verified by reading, not by a
-   green test run here.
-2. **Checkout transactions require a replica set / Atlas cluster.** `createOrder` uses
+1. **Checkout transactions require a replica set / Atlas cluster.** `createOrder` uses
    `startSession()` + `withTransaction()`. On a standalone `mongod`, transactions are
-   unsupported and every checkout fails. This is an implicit deployment requirement.
-
-### High
-
-3. **Rating recalculation is implemented twice with different filters.**
-   `src/utils/accountLifecycle.js` aggregates reviews with `isActive: { $ne: false }`,
-   while `src/controllers/reviewController.js` uses `isActive: true`. The two paths can
-   produce different `ratingsAverage`/`ratingsCount` for the same product.
+   unsupported and every checkout fails. This is an implicit deployment requirement, and
+   checkout is **NOT TESTABLE** in this environment.
+2. **Atlas is unreachable from this machine** because the local DNS resolver does not
+   answer SRV lookups. This is an environment limitation, not an application defect
+   (see section 11).
 
 ### Medium
 
-4. **Admin vendor deactivation is not identical to self-deactivation.** Admin
-   `updateVendorStatus` cascades `isActive` to the shop only, while user self-deactivation
-   cascades to addresses, shops, and reviews. The resulting lifecycle state differs by
-   the actor who triggered it.
-5. **No rate limiting or attempt cap on OTP verification.** A 6-digit code with a
+3. **No rate limiting or attempt cap on OTP verification.** A 6-digit code with a
    10-minute window and no lockout is theoretically brute-forceable.
-6. **`changePassword` has no null guard.** It calls `bcrypt.compare(currentPassword,
-   user.password)` without checking that `user` exists, which would surface as a 500 if
-   the account were removed between authentication and the handler.
-
-### Low
-
-7. **`src/models/otp.js` assigns to an implicit global** (`Otp = mongoose.model(...)`)
-   instead of declaring `const Otp`. It works under non-strict CommonJS but leaks a
-   global and would fail under strict mode.
-8. **`app.js` contains stale commented-out mount lines** and a leftover
-   "each teammate should add their own two lines here" comment.
-9. **No JSON 404 handler.** Unmatched routes fall through to Express's default
-   (non-JSON) 404, which is inconsistent with the project's response envelope.
-10. **Validation error envelope is inconsistent.** The Zod `validator` middleware returns
-    `{ success, message, errors }` without `data: null`, unlike other error responses.
-11. **`getOrderDetails` returns the raw `order.toObject()`** (including `_id`, `__v`)
-    rather than a formatted shape, unlike other domains.
-12. **`updateOrderStatus` manually sets `order.updatedAt`** even though `timestamps: true`
-    already manages it.
-13. **Naming inconsistencies:** reference field names mix styles (`vendor` vs `customerId`
-    vs `userId`), and the `OrderItems` model is plural while others are singular.
-14. **`src/utils/seedAdmin.js` hashes `process.env.SEED_ADMIN_PASSWORD`** without
-    checking it is set, which would hash `undefined` if the variable is absent.
 
 ### Informational
 
-15. `getMyShopDashboard` and `getAnalytics` return `null` placeholders for
-    order/sales/revenue figures pending order-domain integration.
-16. `tests/model-compat.test.js` is a bare-assert script using `console.log` rather than
-    the `node:test` harness, though it still runs and passes.
-17. `src/scripts/seedCategories.js` hardcodes `dns.setServers(['8.8.8.8','1.1.1.1'])`,
-    which suggests the DNS issue was encountered during seeding.
+4. `getMyShopDashboard` and `getAnalytics` return `null` placeholders for
+   order/sales/revenue figures pending order-domain integration.
+5. `tests/model-compat.test.js` is a bare-assert script using `console.log` rather than
+   the `node:test` harness, though it still runs and passes.
+6. `src/scripts/seedCategories.js` hardcodes `dns.setServers(['8.8.8.8','1.1.1.1'])`,
+   which suggests the DNS issue was encountered during seeding.
+7. The Zod `validator` middleware adds an `errors` array to its validation failure body.
+   The envelope keys (`success`, `message`, `data: null`) are all still present, so the
+   array is additive detail rather than a different response format.
+
+### Resolved (no longer issues)
+
+Corrected in the current code, so they are deliberately no longer listed as open:
+
+- The account-lifecycle cascade is covered by green integration tests (9/9 pass).
+- Rating recalculation has a single canonical implementation,
+  `src/utils/productRating.js`, shared by the review paths and the account lifecycle.
+- Admin vendor deactivation cascades through the same helper as self-deactivation
+  (`setRelatedResourcesActive`).
+- `changePassword` checks that the user still exists before comparing passwords.
+- `src/models/otp.js` declares `const Otp` (no implicit global).
+- `app.js` has no stale commented-out mount lines, and unmatched routes return a JSON
+  404 in the shared error envelope.
+- The Zod `validator` middleware includes `data: null` in its error response.
+- `updateOrderStatus` no longer assigns `updatedAt` by hand; `timestamps: true` owns it.
+- `seedAdmin` refuses to run when `SEED_ADMIN_PASSWORD` is not set.
+- The password-reset route is the canonical lower-case `/change-password`.
+
+### Intentional design decisions (not bugs)
+
+- **Reference field naming follows the existing persisted data.** `Product.vendor`,
+  `Cart.userId`, `Order.customerId`/`shopId`, `OrderItems.productId`/`orderId`/
+  `priceAtPurchase`, `Address.user`, and `Review.user` are stored schema fields.
+  Renaming them would require a data migration and would break the public contract, so
+  they are documented as-is.
+- **`getOrderDetails` returns the order document plus its `items` array inside `data`.**
+  Every cart/order endpoint in this domain returns raw documents instead of formatter
+  output, so this matches the established order API contract. The project has no
+  `formatOrder` helper, and the ownership check (`403`) is enforced.
+- **The `OrderItems` model name is plural** while other models are singular. It is the
+  registered model name and renaming it would gain nothing functionally.
 
 ## 13. Changes Made
 
-No application source files were modified during this audit. The only file created is
-this document (`docs/backend-audit.md`). All findings above describe the backend as it
-currently stands.
+This document was created during the audit. The backend has since been cleaned up on the
+`chore/backend-cleanup-and-api-docs` branch: route mounting was split into
+`cartRoutes` / `orderRoutes` / `vendorRoutes`, the password-reset path was normalized to
+lower case, `.env.example` and `docs/API-DOCUMENTATION.md` were updated, and the items
+listed under "Resolved" in section 12 were corrected. The findings above describe the
+backend as it currently stands.
 
 ## 14. Remaining Concerns
 
 Items that require team decisions or cannot be fully verified without additional setup:
 
-1. **Run the integration tests.** Set `TEST_MONGODB_URI` to a reachable test database and
-   run `npm test` so the four currently-skipped tests execute. The cascade behavior should
-   be confirmed by those tests rather than by code reading alone.
-2. **Resolve local DNS.** The server cannot connect to Atlas from this machine because the
-   default resolver at `127.0.0.1` does not answer SRV lookups. Confirming the fix (or
-   deciding on a code-level DNS override) is a team/environment decision.
-3. **Confirm the MongoDB deployment supports transactions.** Checkout assumes a replica
-   set / Atlas cluster.
-4. **Decide the canonical rating-recalculation rule** (one shared helper) so the lifecycle
-   and review paths cannot diverge.
-5. **Decide whether admin-driven vendor deactivation should cascade identically to
-   self-deactivation.**
-6. **Add `TEST_MONGODB_URI` (name only) to `.env.example`** so the integration tests are
-   discoverable.
-7. **Provider/account specifics** (which SMTP provider, which Cloudinary/Atlas tier) were
+1. **Confirm the MongoDB deployment supports transactions.** Checkout assumes a replica
+   set / Atlas cluster; the local standalone instance cannot run it, so checkout is
+   **NOT TESTABLE** here.
+2. **Resolve local DNS** so the Atlas `mongodb+srv://` URI can be resolved from this
+   machine, or accept local MongoDB for development. Atlas remains unverified here and
+   `MONGO_URI` was deliberately left unchanged.
+3. **Decide whether OTP verification needs rate limiting** (attempt cap or lockout).
+4. **Provider/account specifics** (which SMTP provider, which Cloudinary/Atlas tier) were
    not inspected, since `.env` values were intentionally not read.
