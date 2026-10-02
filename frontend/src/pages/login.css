@@ -1,6 +1,6 @@
 .login-page {
     min-height: 100vh;
-    background-color: #ffffff;
+    background-color: #f0fdf4;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -11,7 +11,7 @@
     width:100%;
     max-width: 500px;
     background-color: #ffffff;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #16a34a;
     border-radius: 16px;
     padding: 40px;
     box-sizing: border-box;
@@ -24,7 +24,7 @@
 }
 .login-brand h1 {
     margin: 0;
-    color: #198754;
+    color: #16a34a;
     font-size: 28px;
     font-weight: 700;
     letter-spacing: -0.5px;
@@ -66,11 +66,11 @@
 
 }
 .login-field input:focus {
-    border-color: #198754;
+    border-color: #109b81;
     box-shadow: 0 0 0 2px rgba(25, 135, 84, 0,12);
 }
 .login-field input::placeholder{
-    color: #9ca3af;
+    color: #198754;
 }
 .forgot-link {
     text-align: right;
@@ -91,7 +91,7 @@
     padding: 14px;
     border: none;
     border-radius: 6px;
-    background-color: #198754;
+    background-color: #16a34a;
     color: #ffffff;
     font-size: 16px;
     font-weight: 600;
@@ -99,7 +99,7 @@
     transition: background-color 0.2s ease;
 }
 .login-button:hover {
-    background-color: #146c43;
+    background-color: #15803d;
 }
 .register-text {
     text-align: center;
