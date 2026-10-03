@@ -7,7 +7,6 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
   return (
     <header className="relative z-30 bg-emerald-600 text-white shadow-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 sm:py-4 lg:px-8">
-        {/* Logo */}
         <Link
           to="/"
           className="text-xl font-bold tracking-tight text-white transition-colors hover:text-emerald-100 sm:text-2xl"
@@ -15,24 +14,26 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
           Marketplace
         </Link>
 
+<<<<<<< Updated upstream
         {/* Navigation Links & Cart Icon */}
+=======
+>>>>>>> Stashed changes
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
           <nav className="hidden items-center gap-4 text-sm font-medium md:flex lg:gap-6">
-            <Link to="/" className="hover:text-emerald-200 transition-colors">
+            <Link to="/" className="transition-colors hover:text-emerald-200">
               Home
             </Link>
-            <Link to="/products" className="hover:text-emerald-200 transition-colors">
+            <Link to="/products" className="transition-colors hover:text-emerald-200">
               Products
             </Link>
-            <Link to="/login" className="hover:text-emerald-200 transition-colors">
+            <Link to="/login" className="transition-colors hover:text-emerald-200">
               Login
             </Link>
-            <Link to="/register" className="hover:text-emerald-200 transition-colors">
+            <Link to="/register" className="transition-colors hover:text-emerald-200">
               Register
             </Link>
           </nav>
 
-          {/* SVG Cart Button */}
           <Link
             to="/cart"
             onClick={onCartClick}

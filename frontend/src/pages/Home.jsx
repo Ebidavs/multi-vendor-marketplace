@@ -1,4 +1,6 @@
-import heroImage from "../assets/hero.png"; 
+import Navbar from "../components/Navbar";
+import shoppingImage from "../assets/web-shopping.svg";
+import "./Home.css";
 
 
 function Home() {
