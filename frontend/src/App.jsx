@@ -7,10 +7,10 @@ import CartBar from "./components/CartBar";
 
 // Pages
 import Home from "./pages/Home";
-import Login from "./pages/login.jsx";     
-import Register from "./pages/register.jsx";
-import ForgotPassword from "./pages/forgot-password.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx";
+import Login from "./pages/login";
+import Register from "./pages/register";
+import ForgotPassword from "./pages/forgot-password";
+import ResetPassword from "./pages/ResetPassword";
 
 // Marketplace Components
 import SearchBar from "./components/SearchBar";
@@ -56,8 +56,6 @@ export default function App() {
     filteredProducts,
     handleResetFilters,
   } = useProductFilters(products);
-
-  const showMarketplaceHeader = location.pathname !== "/";
 
   return (
     <div className="min-h-screen bg-gray-50/60 pb-28 text-gray-900 antialiased">

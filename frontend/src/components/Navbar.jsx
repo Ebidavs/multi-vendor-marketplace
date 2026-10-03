@@ -14,10 +14,6 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
           Marketplace
         </Link>
 
-<<<<<<< Updated upstream
-        {/* Navigation Links & Cart Icon */}
-=======
->>>>>>> Stashed changes
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
           <nav className="hidden items-center gap-4 text-sm font-medium md:flex lg:gap-6">
             <Link to="/" className="transition-colors hover:text-emerald-200">
