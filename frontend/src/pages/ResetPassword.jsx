@@ -51,7 +51,7 @@ function ResetPassword() {
     <div className="reset-page">
       <div className="reset-card">
         <div className="reset-brand">
-          <h1>Marketplace</h1>
+          <h1>Xi Market</h1>
         </div>
 
         <h2>Reset password</h2>

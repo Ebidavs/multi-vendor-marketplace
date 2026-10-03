@@ -41,13 +41,13 @@ function Login() {
             <div className="login-card">
 
                 <div className="login-brand">
-                    <h1>Marketplace</h1>
+                    <h1>Xi Market</h1>
                 </div>
 
                 <h2>Welcome Back</h2>
 
                 <p className="login-subtitle">
-                    Sign in to your marketplace account
+                    Sign in to your Xi Market account
                 </p>
 
                 <form onSubmit={handleSubmit}>
@@ -111,4 +111,3 @@ function Login() {
 }
 
 export default Login;
-

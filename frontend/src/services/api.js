@@ -13,7 +13,9 @@ export const registerUser = async (userData) => {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
+        const errorMessage = data.errors?.map((err) =>
+            err.errorMessage).join(".") || data.message || "Registration failed";
+        throw new Error(errorMessage);
     }
     return data;
 };
@@ -51,4 +53,4 @@ export const loginUser = async (userData) => {
         Error(data.message || "Failed tpo send reset link");
     }
     return data;
- };
+};

@@ -1,6 +1,4 @@
-import Navbar from "../components/Navbar"
-import shoppingImage from "..assets/web-shopping.svg";
-import heroImage from "../assets/hero.png"; 
+import shoppingImage from "../assets/web-shopping.svg";
 import "./Home.css";
 
 
@@ -67,8 +65,6 @@ function Home() {
 
   return (
     <div className="home-page">
-      <Navbar />
-
       <main className="home-main">
         <section className="home-hero">
           <div className="hero-content">

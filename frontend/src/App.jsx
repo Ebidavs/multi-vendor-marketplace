@@ -1,33 +1,12 @@
-<<<<<<< HEAD
-import { Routes, Route } from "react-router-dom";
-=======
 import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 
->>>>>>> origin/main
 import Home from "./pages/Home";
-
 import Login from "./pages/login";
 import Register from "./pages/register";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/ResetPassword";
 
-<<<<<<< HEAD
-function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-    </Routes>
-  );
-}
-
-export default App;
-=======
 import Navbar from "./components/Navbar";
 import SearchBar from "./components/SearchBar";
 import CategoryBar from "./components/CategoryBar";
@@ -39,7 +18,6 @@ import VendorDetail from "./components/VendorDetail";
 import { useCart } from "./hooks/useCart";
 import { useProductFilters } from "./hooks/useProductFilters";
 import { categoriesList, dummyProducts, dummyVendors } from "./data/productsData";
->>>>>>> origin/main
 
 const getPageSize = () => {
   if (window.innerWidth < 640) return 4;
@@ -100,9 +78,6 @@ export default function App() {
     (_, index) => firstVisiblePage + index
   );
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filteredProducts, pageSize]);
 
   useEffect(() => {
     const updatePageSize = () => setPageSize(getPageSize());
@@ -242,7 +217,12 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={marketplacePage} />
+        <Route path="/login"element={<Login />} />
         <Route path="/marketplace" element={marketplacePage} />
+        <Route path="/register"element={<Register />} />
+        <Route path="/forgot-password"element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
         <Route
           path="/cart"
           element={
@@ -300,6 +280,5 @@ export default function App() {
           }
         />
       </Routes>
-    </div>
-  );
+    </div>);
 }

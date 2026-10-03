@@ -65,13 +65,13 @@ function Register() {
     <div className="register-page">
       <div className="register-card">
         <div className="register-brand">
-          <h1>Marketplace</h1>
+          <h1>Xi Market</h1>
         </div>
 
         <h2>Create Account</h2>
 
         <p className="register-subtitle">
-          Create your marketplace account
+          Create your Xi Market account
         </p>
 
         <form onSubmit={handleSubmit}>
