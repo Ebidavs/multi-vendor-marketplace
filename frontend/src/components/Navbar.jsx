@@ -15,6 +15,14 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
           Marketplace
         </Link>
 
+<<<<<<< HEAD
+            <div className="navbar-links">
+                <a href="/">Home</a>
+                
+                <a href="/login">login</a>
+                <a href="/register">Register</a>
+            </div>
+=======
         {/* Navigation Links & Cart Icon */}
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
           <nav className="hidden items-center gap-4 text-sm font-medium md:flex lg:gap-6">
@@ -31,6 +39,7 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
               Register
             </Link>
           </nav>
+>>>>>>> origin/main
 
           {/* SVG Cart Button */}
           <Link
