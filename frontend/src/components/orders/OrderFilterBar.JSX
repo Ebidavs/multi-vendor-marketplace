@@ -5,7 +5,7 @@ export default function OrderFilterBar({ activeFilter, onFilterChange, searchTer
     <div className="ord-filter">
       <input
         type="text"
-        placeholder="Search by order ID or product..."
+        placeholder="Search by order ID..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
         className="ord-search"

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import OrderStatusBadge from './OrderStatusBadge';
 
+
 export default function OrderCard({ order }) {
   return (
     <Link to={`/orders/${order._id}`} className="ord-card">
@@ -12,10 +13,8 @@ export default function OrderCard({ order }) {
         <OrderStatusBadge status={order.status} />
       </div>
       <div className="ord-card-bottom">
-        <span className="ord-card-count">
-          {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-        </span>
-        <span className="ord-card-total">₦{order.total.toLocaleString()}</span>
+        <span className="ord-card-count">View details</span>
+        <span className="ord-card-total">₦{order.totalAmount.toLocaleString()}</span>
       </div>
     </Link>
   );

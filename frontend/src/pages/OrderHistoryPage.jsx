@@ -19,12 +19,10 @@ export default function OrderHistoryPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Order list has no product info, so search matches the order ID only.
   const filteredOrders = orders.filter((order) => {
     const matchesFilter = filter === 'all' || order.status === filter;
-    const matchesSearch =
-      search === '' ||
-      order._id.toLowerCase().includes(search.toLowerCase()) ||
-      order.items.some((item) => item.name.toLowerCase().includes(search.toLowerCase()));
+    const matchesSearch = search === '' || order._id.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 

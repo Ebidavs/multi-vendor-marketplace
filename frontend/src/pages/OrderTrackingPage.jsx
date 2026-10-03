@@ -55,21 +55,21 @@ export default function OrderTrackingPage() {
 
       <div className="ord-total-row">
         <span>Total</span>
-        <strong>₦{order.total.toLocaleString()}</strong>
+        <strong>₦{order.totalAmount.toLocaleString()}</strong>
       </div>
 
       {order.status === 'delivered' && (
         <div>
           <h2 className="ord-section-title">Rate your items</h2>
           {order.items.map((item) =>
-            reviewedProducts.includes(item.productId) ? (
-              <p key={item.productId} className="ord-reviewed">
-                ✓ You reviewed {item.name}
+            reviewedProducts.includes(item.productId._id) ? (
+              <p key={item.productId._id} className="ord-reviewed">
+                ✓ You reviewed {item.productId.name}
               </p>
             ) : (
-              <div key={item.productId} className="ord-review-item">
-                <p className="ord-review-product">{item.name}</p>
-                <ReviewForm productId={item.productId} onSubmit={handleReviewSubmit} />
+              <div key={item.productId._id} className="ord-review-item">
+                <p className="ord-review-product">{item.productId.name}</p>
+                <ReviewForm productId={item.productId._id} onSubmit={handleReviewSubmit} />
               </div>
             )
           )}
