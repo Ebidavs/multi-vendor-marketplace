@@ -1,47 +1,160 @@
+import { useState } from "react";
 import "./register.css";
+import { registerUser } from "../services/api";
 
-function Register(){
-    return (
-        <div className="register-page">
-            <div className="register-card">
-                <div className="register-brand">
+function Register() {
+  const [formData, setFormData] = useState({
+    role: "customer",
+    name: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-                <h1>Marketplace</h1>
-                </div>
-                <h2>Create Account</h2>
-                <p className="register-subtitle">Create your marketplace account</p>
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-                <form>
-                    <div className="register-field">
-                    <label>Full Name</label>
-                    <input type="text" placeholder="Enter your full name" required></input>
-                    </div>
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-                    <div className="register-field">
-                    <label>Email</label>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-                    <input type="email" placeholder="Enter your email" required></input>
-                    </div>
+    setMessage("");
+    setError("");
 
-                    <div className="register-field">
-                    <label>Password</label>
-                    <input type="password" placeholder="Create a password" required></input>
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
-                    </div>
+    setLoading(true);
 
-                    <div className="register-field">
+    try {
+      const userData = 
+       {...formData }; 
+       delete
+      userData.confirmPassword;
 
-                    <label>Confirm password</label>
-                    <input type="password" placeholder="Confirm your password" required></input>
+      const data = await registerUser(userData);
 
-                        </div>
+      setMessage(data.message || "Registration successful!");
 
-                    <button type="submit" className="register-button">Create Account</button>
-                </form>
+      setFormData({
+        role: "customer",
+        name: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (err) {
+      setError(err.message || "Registration failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                <p className="login-text">Already have an account?{" "} < a href="/login">Login</a></p>
-            </div>
+  return (
+    <div className="register-page">
+      <div className="register-card">
+        <div className="register-brand">
+          <h1>Marketplace</h1>
         </div>
-    );
+
+        <h2>Create Account</h2>
+
+        <p className="register-subtitle">
+          Create your marketplace account
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="register-field">
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter your full name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="register-field">
+            <label>Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="register-field">
+            <label>Phone Number</label>
+            <input
+              type="tel"
+              name="phoneNumber"
+              placeholder="Enter your phone number"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="register-field">
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Create a password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="register-field">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {error && <p className="error-message">{error}</p>}
+
+          {message && <p className="success-message">{message}</p>}
+
+          <button
+            type="submit"
+            className="register-button"
+            disabled={loading}
+          >
+            {loading ? "Creating Account..." : "Create Account"}
+          </button>
+        </form>
+
+        <p className="login-text">
+          Already have an account?{" "}
+          <a href="/login">Login</a>
+        </p>
+      </div>
+    </div>
+  );
 }
-export default Register
+
+export default Register;

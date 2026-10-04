@@ -160,4 +160,17 @@ button, input {
   height:auto;
   display: block;
 }
+* {
+  box-sizing: border-box;
+}
 
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
