@@ -1,9 +1,23 @@
-import {useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { ArrowLeft } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import ProductForm from "../../components/dashboard/ProductForm";
+
+import {
+  getCategories,
+  getProductById,
+  updateProduct,
+} from "../../services/api";
+
 import "./vendor.css";
 
 function EditProduct() {
@@ -11,121 +25,317 @@ function EditProduct() {
   const { id } = useParams();
 
   const [formData, setFormData] = useState({
-    name: "Wireless Headphones",
-    category: "electronics",
-    description: "Premium wireless headphones with clear sound and comfortable ear cushions.",
-    price: "45000",
-    stock: "25",
+    name: "",
+    category: "",
+    description: "",
+    price: "",
+    stock: "",
   });
 
   const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] =
+    useState([]);
 
-  // Temporary categories.
-  // These will later come from GET /api/v1/categories.
-  const categories = [
-    { id: "electronics", name: "Electronics" },
-    { id: "fashion", name: "Fashion" },
-    { id: "home", name: "Home & Living" },
-    { id: "beauty", name: "Beauty" },
-    { id: "sports", name: "Sports" },
-    { id: "food", name: "Food & Groceries" },
-  ];
+  const [categories, setCategories] =
+    useState([]);
 
+  const [pageLoading, setPageLoading] =
+    useState(true);
 
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  useEffect(() => {
+    const loadProductData = async () => {
+      try {
+        setError("");
+        setPageLoading(true);
+
+        const [
+          productResponse,
+          categoriesResponse,
+        ] = await Promise.all([
+          getProductById(id),
+          getCategories(),
+        ]);
+
+        const product =
+          productResponse.data?.product;
+
+        if (!product) {
+          throw new Error(
+            "Product could not be found."
+          );
+        }
+
+        setFormData({
+          name: product.name || "",
+          category:
+            product.categoryId || "",
+          description:
+            product.description || "",
+          price:
+            product.price?.toString() ||
+            "",
+          stock:
+            product.stockQuantity?.toString() ||
+            "0",
+        });
+
+        setExistingImages(
+          product.images || []
+        );
+
+        setCategories(
+          categoriesResponse.data || []
+        );
+      } catch (err) {
+        console.error(
+          "Load product error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Failed to load product."
+        );
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    loadProductData();
+  }, [id]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value } =
+      event.target;
 
-    setFormData((previousData) => ({
-      ...previousData,
+    setFormData((previous) => ({
+      ...previous,
       [name]: value,
     }));
   };
 
   const handleImagesChange = (event) => {
-    const selectedFiles = Array.from(event.target.files);
+    const selectedFiles = Array.from(
+      event.target.files
+    );
 
-    setImages((previousImages) => {
-      const combinedImages = [
-        ...previousImages,
+    setImages((previous) =>
+      [
+        ...previous,
         ...selectedFiles,
-      ];
-
-      return combinedImages.slice(0, 5);
-    });
+      ].slice(0, 5)
+    );
 
     event.target.value = "";
   };
 
-  const removeImage = (imageIndex) => {
-    setImages((previousImages) =>
-      previousImages.filter(
-        (_, index) => index !== imageIndex
+  const removeImage = (index) => {
+    setImages((previous) =>
+      previous.filter(
+        (_, imageIndex) =>
+          imageIndex !== index
       )
     );
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (
+    event
+  ) => {
     event.preventDefault();
 
-    const productData = new FormData();
+    setError("");
 
-    productData.append("name", formData.name);
-    productData.append("description", formData.description);
-    productData.append("price", formData.price);
-    productData.append("stock", formData.stock);
-    productData.append("category", formData.category);
+    if (!formData.category) {
+      setError(
+        "Please select a product category."
+      );
 
-    // Images are optional when editing.
-    // If new images are selected, the backend replaces the old images.
-    images.forEach((image) => {
-      productData.append("images", image);
-    });
-
-    console.log("Editing product:", id);
-
-    for (const [key, value] of productData.entries()) {
-      console.log(key, value);
+      return;
     }
 
-    alert("Product update is ready for backend submission.");
+    const productData =
+      new FormData();
+
+    productData.append(
+      "name",
+      formData.name
+    );
+
+    productData.append(
+      "description",
+      formData.description
+    );
+
+    productData.append(
+      "price",
+      formData.price
+    );
+
+    productData.append(
+      "stock",
+      formData.stock
+    );
+
+    productData.append(
+      "category",
+      formData.category
+    );
+
+    /*
+      Images are optional when updating.
+
+      If the vendor selects new images,
+      the backend replaces the existing
+      product images with these new ones.
+
+      If no new images are selected,
+      the existing images remain unchanged.
+    */
+    images.forEach((image) => {
+      productData.append(
+        "images",
+        image
+      );
+    });
+
+    try {
+      setLoading(true);
+
+      const response =
+        await updateProduct(
+          id,
+          productData
+        );
+
+      console.log(
+        "Product updated:",
+        response
+      );
+
+      alert(
+        "Product updated successfully."
+      );
+
+      navigate(
+        "/vendor/products"
+      );
+    } catch (err) {
+      console.error(
+        "Update product error:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Failed to update product."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <DashboardLayout role="vendor">
       <section className="add-product-page">
-        <div className="add-product-header">
-          <div className="add-product-heading">
+        <div className="dashboard-page-heading">
+          <div>
             <button
               type="button"
               className="back-button"
-              onClick={() => navigate("/vendor/products")}
+              onClick={() =>
+                navigate(
+                  "/vendor/products"
+                )
+              }
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
+              Back to Products
             </button>
 
-            <div>
-              <h1>Edit Product</h1>
-              <p>
-                Update your product information, pricing,
-                stock and images.
-              </p>
-            </div>
+            <h1>Edit Product</h1>
+
+            <p>
+              Update your product
+              information.
+            </p>
           </div>
         </div>
 
-        <ProductForm
-          formData={formData}
-          onChange={handleChange}
-          images={images}
-          onImagesChange={handleImagesChange}
-          onRemoveImage={removeImage}
-          onSubmit={handleSubmit}
-          categories={categories}
-          submitText="Save Changes"
-          title="Product Information"
-          description="Update the information about your product."
-        />
+        {error && (
+          <p className="login-error">
+            {error}
+          </p>
+        )}
+
+        {pageLoading ? (
+          <p>Loading product...</p>
+        ) : (
+          <>
+            {existingImages.length >
+              0 && (
+              <div className="existing-product-images">
+                <p>
+                  Current product images
+                </p>
+
+                <div className="existing-images-grid">
+                  {existingImages.map(
+                    (
+                      image,
+                      index
+                    ) => (
+                      <img
+                        key={`${image}-${index}`}
+                        src={image}
+                        alt={`Current product ${
+                          index + 1
+                        }`}
+                      />
+                    )
+                  )}
+                </div>
+
+                <small>
+                  Select new images only
+                  if you want to replace
+                  the current product
+                  images.
+                </small>
+              </div>
+            )}
+
+            <ProductForm
+              formData={formData}
+              onChange={handleChange}
+              images={images}
+              onImagesChange={
+                handleImagesChange
+              }
+              onRemoveImage={
+                removeImage
+              }
+              onSubmit={
+                handleSubmit
+              }
+              categories={
+                categories
+              }
+              submitText={
+                loading
+                  ? "Saving Changes..."
+                  : "Save Changes"
+              }
+              title="Product Information"
+              description="Update the details of your product."
+            />
+          </>
+        )}
       </section>
     </DashboardLayout>
   );

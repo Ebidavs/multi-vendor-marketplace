@@ -1,5 +1,10 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import {
   Search,
   ShoppingBag,
@@ -10,112 +15,204 @@ import {
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import OrdersTable from "../../components/dashboard/OrdersTable";
+
+import {
+  getVendorOrders,
+  updateOrderStatus,
+} from "../../services/api";
+
 import "./vendor.css";
 
 function VendorOrders() {
   const navigate = useNavigate();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [searchTerm, setSearchTerm] =
+    useState("");
 
-  const [orders, setOrders] = useState([
-    {
-      id: "#MKT1024",
-      customer: "David Johnson",
-      product: "Wireless Headphones",
-      quantity: 1,
-      amount: "₦45,000",
-      date: "Sep 29, 2026",
-      status: "Delivered",
-    },
-    {
-      id: "#MKT1023",
-      customer: "Sarah Williams",
-      product: "Smart Watch",
-      quantity: 1,
-      amount: "₦85,000",
-      date: "Sep 29, 2026",
-      status: "Processing",
-    },
-    {
-      id: "#MKT1022",
-      customer: "Michael James",
-      product: "Laptop Backpack",
-      quantity: 2,
-      amount: "₦57,000",
-      date: "Sep 28, 2026",
-      status: "Shipped",
-    },
-    {
-      id: "#MKT1021",
-      customer: "Grace Peter",
-      product: "Bluetooth Speaker",
-      quantity: 1,
-      amount: "₦32,000",
-      date: "Sep 28, 2026",
-      status: "Pending",
-    },
-    {
-      id: "#MKT1020",
-      customer: "Daniel Thomas",
-      product: "Running Sneakers",
-      quantity: 1,
-      amount: "₦58,000",
-      date: "Sep 27, 2026",
-      status: "Pending",
-    },
-  ]);
+  const [statusFilter, setStatusFilter] =
+    useState("All");
 
-  const handleStatusChange = (
-    orderId,
-    newStatus
-  ) => {
-    // Temporary frontend update.
-    // Later this will call the backend status endpoint.
-    setOrders((previousOrders) =>
-      previousOrders.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              status: newStatus,
-            }
-          : order
-      )
+  const [orders, setOrders] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  // Format backend status values such as
+  // "pending" into "Pending".
+  const formatStatus = (status) => {
+    if (!status) {
+      return "Pending";
+    }
+
+    return (
+      status.charAt(0).toUpperCase() +
+      status.slice(1).toLowerCase()
     );
   };
 
-  const handleViewOrder = (order) => {
-    const orderId = order.id.replace("#", "");
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-    navigate(`/vendor/orders/${orderId}`);
+        const response =
+          await getVendorOrders();
+
+        const backendOrders =
+          response.data?.items || [];
+
+        const formattedOrders =
+          backendOrders.map((order) => ({
+            id: order._id || order.id,
+
+            customer:
+              order.customerId?.name ||
+              order.shippingAddress?.fullName ||
+              "Customer",
+
+            product:
+              order.items?.[0]?.productId?.name ||
+              order.items?.[0]?.productName ||
+              "Order items",
+
+            quantity:
+              order.items?.reduce(
+                (total, item) =>
+                  total +
+                  Number(item.quantity || 0),
+                0
+              ) || 0,
+
+            amount: `₦${Number(
+              order.totalAmount || 0
+            ).toLocaleString()}`,
+
+            date: order.createdAt
+              ? new Date(
+                  order.createdAt
+                ).toLocaleDateString(
+                  "en-NG",
+                  {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }
+                )
+              : "N/A",
+
+            status: formatStatus(
+              order.status
+            ),
+          }));
+
+        setOrders(formattedOrders);
+      } catch (err) {
+        console.error(
+          "Load vendor orders error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Failed to load orders."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, []);
+
+  const handleStatusChange = async (
+    orderId,
+    newStatus
+  ) => {
+    try {
+      setError("");
+
+      await updateOrderStatus(
+        orderId,
+        newStatus.toLowerCase()
+      );
+
+      setOrders((previousOrders) =>
+        previousOrders.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                status: newStatus,
+              }
+            : order
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Update order status error:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Failed to update order status."
+      );
+    }
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const search = searchTerm.toLowerCase();
+  const handleViewOrder = (order) => {
+    navigate(
+      `/vendor/orders/${order.id}`
+    );
+  };
 
-    const matchesSearch =
-      order.id.toLowerCase().includes(search) ||
-      order.customer.toLowerCase().includes(search) ||
-      order.product.toLowerCase().includes(search);
+  const filteredOrders =
+    orders.filter((order) => {
+      const search =
+        searchTerm.toLowerCase();
 
-    const matchesStatus =
-      statusFilter === "All" ||
-      order.status === statusFilter;
+      const matchesSearch =
+        order.id
+          .toLowerCase()
+          .includes(search) ||
+        order.customer
+          .toLowerCase()
+          .includes(search) ||
+        order.product
+          .toLowerCase()
+          .includes(search);
 
-    return matchesSearch && matchesStatus;
-  });
+      const matchesStatus =
+        statusFilter === "All" ||
+        order.status === statusFilter;
 
-  const pendingOrders = orders.filter(
-    (order) => order.status === "Pending"
-  ).length;
+      return (
+        matchesSearch &&
+        matchesStatus
+      );
+    });
 
-  const shippedOrders = orders.filter(
-    (order) => order.status === "Shipped"
-  ).length;
+  const pendingOrders =
+    orders.filter(
+      (order) =>
+        order.status === "Pending"
+    ).length;
 
-  const deliveredOrders = orders.filter(
-    (order) => order.status === "Delivered"
-  ).length;
+  const shippedOrders =
+    orders.filter(
+      (order) =>
+        order.status === "Shipped"
+    ).length;
+
+  const deliveredOrders =
+    orders.filter(
+      (order) =>
+        order.status === "Delivered"
+    ).length;
 
   return (
     <DashboardLayout role="vendor">
@@ -125,8 +222,8 @@ function VendorOrders() {
             <h1>Orders</h1>
 
             <p>
-              Manage and track orders placed with your
-              store.
+              Manage and track orders placed
+              with your store.
             </p>
           </div>
         </div>
@@ -139,7 +236,9 @@ function VendorOrders() {
 
             <div>
               <span>Total Orders</span>
-              <strong>{orders.length}</strong>
+              <strong>
+                {orders.length}
+              </strong>
             </div>
           </div>
 
@@ -150,7 +249,10 @@ function VendorOrders() {
 
             <div>
               <span>Pending</span>
-              <strong>{pendingOrders}</strong>
+
+              <strong>
+                {pendingOrders}
+              </strong>
             </div>
           </div>
 
@@ -161,18 +263,26 @@ function VendorOrders() {
 
             <div>
               <span>Shipped</span>
-              <strong>{shippedOrders}</strong>
+
+              <strong>
+                {shippedOrders}
+              </strong>
             </div>
           </div>
 
           <div className="order-summary-card">
             <div className="order-summary-icon delivered-icon">
-              <CheckCircle2 size={21} />
+              <CheckCircle2
+                size={21}
+              />
             </div>
 
             <div>
               <span>Delivered</span>
-              <strong>{deliveredOrders}</strong>
+
+              <strong>
+                {deliveredOrders}
+              </strong>
             </div>
           </div>
         </div>
@@ -187,7 +297,9 @@ function VendorOrders() {
                 placeholder="Search order, customer or product..."
                 value={searchTerm}
                 onChange={(event) =>
-                  setSearchTerm(event.target.value)
+                  setSearchTerm(
+                    event.target.value
+                  )
                 }
               />
             </div>
@@ -196,43 +308,87 @@ function VendorOrders() {
               className="order-status-filter"
               value={statusFilter}
               onChange={(event) =>
-                setStatusFilter(event.target.value)
+                setStatusFilter(
+                  event.target.value
+                )
               }
             >
-              <option value="All">All Orders</option>
-              <option value="Pending">Pending</option>
+              <option value="All">
+                All Orders
+              </option>
+
+              <option value="Pending">
+                Pending
+              </option>
+
               <option value="Processing">
                 Processing
               </option>
-              <option value="Shipped">Shipped</option>
+
+              <option value="Shipped">
+                Shipped
+              </option>
+
               <option value="Delivered">
                 Delivered
               </option>
             </select>
           </div>
 
-          <OrdersTable
-            orders={filteredOrders}
-            onStatusChange={handleStatusChange}
-            onViewOrder={handleViewOrder}
-          />
+          {error && (
+            <p className="login-error">
+              {error}
+            </p>
+          )}
 
-          <div className="table-pagination">
-            <span>
-              Showing {filteredOrders.length} of{" "}
-              {orders.length} orders
-            </span>
+          {loading ? (
+            <div className="empty-products">
+              <ShoppingBag size={35} />
 
-            <div>
-              <button disabled>Previous</button>
-
-              <button className="pagination-active">
-                1
-              </button>
-
-              <button>Next</button>
+              <h3>
+                Loading orders...
+              </h3>
             </div>
-          </div>
+          ) : (
+            <>
+              <OrdersTable
+                orders={
+                  filteredOrders
+                }
+                onStatusChange={
+                  handleStatusChange
+                }
+                onViewOrder={
+                  handleViewOrder
+                }
+              />
+
+              <div className="table-pagination">
+                <span>
+                  Showing{" "}
+                  {
+                    filteredOrders.length
+                  }{" "}
+                  of {orders.length}{" "}
+                  orders
+                </span>
+
+                <div>
+                  <button disabled>
+                    Previous
+                  </button>
+
+                  <button className="pagination-active">
+                    1
+                  </button>
+
+                  <button disabled>
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </section>
       </section>
     </DashboardLayout>

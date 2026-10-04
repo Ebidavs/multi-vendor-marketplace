@@ -1,114 +1,266 @@
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
-import { ShoppingBag, Package, Users,} from "lucide-react";
+
+import {
+  ShoppingBag,
+  Package,
+  CheckCircle2,
+} from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+
+import {
+  getVendorDashboard,
+  getVendorOrders,
+} from "../../services/api";
+
 import "./vendor.css";
 
 function VendorDashboard() {
   const navigate = useNavigate();
+
+  const [dashboard, setDashboard] =
+    useState(null);
+
+  const [recentOrders, setRecentOrders] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const formatStatus = (status) => {
+    if (!status) {
+      return "Pending";
+    }
+
+    return (
+      status.charAt(0).toUpperCase() +
+      status.slice(1).toLowerCase()
+    );
+  };
+
+  const formatMoney = (amount) => {
+    if (
+      amount === null ||
+      amount === undefined
+    ) {
+      return "—";
+    }
+
+    return `₦${Number(
+      amount
+    ).toLocaleString()}`;
+  };
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const [
+          dashboardResponse,
+          ordersResponse,
+        ] = await Promise.all([
+          getVendorDashboard(),
+          getVendorOrders(),
+        ]);
+
+        setDashboard(
+          dashboardResponse.data || null
+        );
+
+        const backendOrders =
+          ordersResponse.data?.items || [];
+
+        const formattedOrders =
+          backendOrders
+            .slice(0, 5)
+            .map((order) => ({
+              id: order._id || order.id,
+
+              customer:
+                order.customerId?.name ||
+                order.shippingAddress
+                  ?.fullName ||
+                "Customer",
+
+              product:
+                order.items?.[0]
+                  ?.productId?.name ||
+                order.items?.[0]
+                  ?.productName ||
+                "Order items",
+
+              amount: formatMoney(
+                order.totalAmount
+              ),
+
+              status: formatStatus(
+                order.status
+              ),
+            }));
+
+        setRecentOrders(
+          formattedOrders
+        );
+      } catch (err) {
+        console.error(
+          "Vendor dashboard error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Failed to load dashboard."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
+  const shop = dashboard?.shop;
+
+  const storeName =
+    shop?.name ||
+    shop?.shopName ||
+    "Vendor";
+
   const stats = [
     {
       title: "Total Sales",
-      value: "₦1,250,000",
-      change: "+12.5%",
+      value: formatMoney(
+        dashboard?.totalSales
+      ),
       icon: null,
       currency: true,
     },
     {
       title: "Total Orders",
-      value: "42",
-      change: "+8.2%",
+      value:
+        dashboard?.totalOrders ??
+        "—",
       icon: ShoppingBag,
     },
     {
-      title: "Products",
-      value: "15",
-      change: "+2",
+      title: "Total Products",
+      value:
+        dashboard?.totalProducts ??
+        0,
       icon: Package,
     },
     {
-      title: "Customers",
-      value: "327",
-      change: "+18.4%",
-      icon: Users,
+      title: "Active Products",
+      value:
+        dashboard?.activeProducts ??
+        0,
+      icon: CheckCircle2,
     },
   ];
 
-  const recentOrders = [
-    {
-      id: "#MKT1024",
-      customer: "David Johnson",
-      product: "Wireless Headphones",
-      amount: "₦45,000",
-      status: "Delivered",
-    },
-    {
-      id: "#MKT1023",
-      customer: "Sarah Williams",
-      product: "Smart Watch",
-      amount: "₦85,000",
-      status: "Processing",
-    },
-    {
-      id: "#MKT1022",
-      customer: "Michael James",
-      product: "Laptop Backpack",
-      amount: "₦28,500",
-      status: "Shipped",
-    },
-    {
-      id: "#MKT1021",
-      customer: "Grace Peter",
-      product: "Bluetooth Speaker",
-      amount: "₦32,000",
-      status: "Cancelled",
-    },
-  ];
+  const handleViewStore = () => {
+    if (shop?.id || shop?._id) {
+      navigate(
+        `/shops/${
+          shop.id || shop._id
+        }`
+      );
+
+      return;
+    }
+
+    navigate("/vendor/profile");
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout role="vendor">
+        <section className="vendor-dashboard">
+          <div className="dashboard-panel">
+            <p>
+              Loading dashboard...
+            </p>
+          </div>
+        </section>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout role="vendor">
       <section className="vendor-dashboard">
         <div className="dashboard-page-heading">
           <div>
-            <h1>Welcome back, TechHub 👋</h1>
+            <h1>
+              Welcome back,{" "}
+              {storeName} 👋
+            </h1>
 
             <p>
-              Here's what's happening with your store today. Track your sales,
-              orders, products and customer activity from one place.
+              Here's what's happening
+              with your store today.
+              Track your orders,
+              products and store
+              activity from one place.
             </p>
           </div>
 
           <button
             className="view-store-button"
-            onClick={() => navigate("/vendors/techhub-store")}
+            onClick={
+              handleViewStore
+            }
           >
             View Store
           </button>
         </div>
+
+        {error && (
+          <p className="login-error">
+            {error}
+          </p>
+        )}
 
         <div className="stats-grid">
           {stats.map((stat) => {
             const Icon = stat.icon;
 
             return (
-              <article className="stat-card" key={stat.title}>
+              <article
+                className="stat-card"
+                key={stat.title}
+              >
                 <div className="stat-card-top">
                   <div className="stat-icon">
                     {stat.currency ? (
-                      <span className="dashboard-naira-icon">₦</span>
+                      <span className="dashboard-naira-icon">
+                        ₦
+                      </span>
                     ) : (
                       <Icon size={22} />
                     )}
                   </div>
-
-                  <span className="stat-change">{stat.change}</span>
                 </div>
 
-                <p className="stat-title">{stat.title}</p>
+                <p className="stat-title">
+                  {stat.title}
+                </p>
 
                 <h2>{stat.value}</h2>
 
-                <span className="stat-period">Compared to last month</span>
+                <span className="stat-period">
+                  Current store data
+                </span>
               </article>
             );
           })}
@@ -118,36 +270,65 @@ function VendorDashboard() {
           <section className="dashboard-panel sales-panel">
             <div className="panel-heading">
               <div>
-                <h2>Sales Overview</h2>
-                <p>Your sales performance over time</p>
-              </div>
+                <h2>
+                  Store Performance
+                </h2>
 
-              <select defaultValue="7days">
-                <option value="7days">Last 7 days</option>
-                <option value="30days">Last 30 days</option>
-                <option value="year">This year</option>
-              </select>
+                <p>
+                  Current product
+                  performance
+                </p>
+              </div>
             </div>
 
-            <div className="chart-placeholder">
-              <div className="fake-chart">
-                <div style={{ height: "38%" }}></div>
-                <div style={{ height: "52%" }}></div>
-                <div style={{ height: "46%" }}></div>
-                <div style={{ height: "68%" }}></div>
-                <div style={{ height: "58%" }}></div>
-                <div style={{ height: "82%" }}></div>
-                <div style={{ height: "72%" }}></div>
+            <div className="summary-list">
+              <div>
+                <span>
+                  Total products
+                </span>
+
+                <strong>
+                  {dashboard
+                    ?.totalProducts ??
+                    0}
+                </strong>
               </div>
 
-              <div className="chart-days">
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-                <span>Sun</span>
+              <div>
+                <span>
+                  Active products
+                </span>
+
+                <strong>
+                  {dashboard
+                    ?.activeProducts ??
+                    0}
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Total orders
+                </span>
+
+                <strong>
+                  {dashboard
+                    ?.totalOrders ??
+                    "—"}
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Total sales
+                </span>
+
+                <strong>
+                  {formatMoney(
+                    dashboard
+                      ?.totalSales
+                  )}
+                </strong>
               </div>
             </div>
           </section>
@@ -155,30 +336,62 @@ function VendorDashboard() {
           <section className="dashboard-panel store-summary">
             <div className="panel-heading">
               <div>
-                <h2>Store Summary</h2>
-                <p>This month's performance</p>
+                <h2>
+                  Store Summary
+                </h2>
+
+                <p>
+                  Your store
+                  information
+                </p>
               </div>
             </div>
 
             <div className="summary-list">
               <div>
-                <span>Store rating</span>
-                <strong>4.8 / 5</strong>
+                <span>
+                  Store name
+                </span>
+
+                <strong>
+                  {storeName}
+                </strong>
               </div>
 
               <div>
-                <span>Product views</span>
-                <strong>2,481</strong>
+                <span>
+                  Products
+                </span>
+
+                <strong>
+                  {dashboard
+                    ?.totalProducts ??
+                    0}
+                </strong>
               </div>
 
               <div>
-                <span>Conversion rate</span>
-                <strong>8.4%</strong>
+                <span>
+                  Active products
+                </span>
+
+                <strong>
+                  {dashboard
+                    ?.activeProducts ??
+                    0}
+                </strong>
               </div>
 
               <div>
-                <span>Pending orders</span>
-                <strong>6</strong>
+                <span>
+                  Store status
+                </span>
+
+                <strong>
+                  {shop
+                    ? "Active"
+                    : "Not created"}
+                </strong>
               </div>
             </div>
           </section>
@@ -187,11 +400,26 @@ function VendorDashboard() {
         <section className="dashboard-panel recent-orders-panel">
           <div className="panel-heading">
             <div>
-              <h2>Recent Orders</h2>
-              <p>Your latest customer orders</p>
+              <h2>
+                Recent Orders
+              </h2>
+
+              <p>
+                Your latest customer
+                orders
+              </p>
             </div>
 
-            <button className="text-button">View All</button>
+            <button
+              className="text-button"
+              onClick={() =>
+                navigate(
+                  "/vendor/orders"
+                )
+              }
+            >
+              View All
+            </button>
           </div>
 
           <div className="table-wrapper">
@@ -207,22 +435,62 @@ function VendorDashboard() {
               </thead>
 
               <tbody>
-                {recentOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="order-id">{order.id}</td>
-                    <td>{order.customer}</td>
-                    <td>{order.product}</td>
-                    <td className="order-amount">{order.amount}</td>
-
-                    <td>
-                      <span
-                        className={`status-badge ${order.status.toLowerCase()}`}
+                {recentOrders.length >
+                0 ? (
+                  recentOrders.map(
+                    (order) => (
+                      <tr
+                        key={
+                          order.id
+                        }
                       >
-                        {order.status}
-                      </span>
+                        <td className="order-id">
+                          {order.id}
+                        </td>
+
+                        <td>
+                          {
+                            order.customer
+                          }
+                        </td>
+
+                        <td>
+                          {
+                            order.product
+                          }
+                        </td>
+
+                        <td className="order-amount">
+                          {
+                            order.amount
+                          }
+                        </td>
+
+                        <td>
+                          <span
+                            className={`status-badge ${order.status.toLowerCase()}`}
+                          >
+                            {
+                              order.status
+                            }
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  )
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      style={{
+                        textAlign:
+                          "center",
+                      }}
+                    >
+                      No orders yet.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

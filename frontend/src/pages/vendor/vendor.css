@@ -5628,3 +5628,35 @@
     min-height: 145px;
   }
 }
+.existing-product-images {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.existing-product-images p {
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: #1f2937;
+}
+
+.existing-images-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.existing-images-grid img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.existing-product-images small {
+  color: #6b7280;
+}

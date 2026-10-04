@@ -57,8 +57,8 @@ function ProductForm({
 
                 {categories.map((category) => (
                   <option
-                    key={category.id}
-                    value={category.id}
+                    key={category._id || category.id}
+                    value={category._id || category.id}
                   >
                     {category.name}
                   </option>

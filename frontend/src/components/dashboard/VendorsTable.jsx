@@ -8,6 +8,23 @@ function VendorsTable({
   vendors,
   onStatusChange,
 }) {
+  const formatDate = (date) => {
+    if (!date) {
+      return "—";
+    }
+
+    return new Date(
+      date
+    ).toLocaleDateString(
+      "en-NG",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }
+    );
+  };
+
   return (
     <div className="admin-table-wrapper">
       <table className="admin-table">
@@ -15,8 +32,8 @@ function VendorsTable({
           <tr>
             <th>Store</th>
             <th>Owner</th>
-            <th>Products</th>
-            <th>Total Sales</th>
+            <th>Email</th>
+            <th>Joined</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -31,16 +48,24 @@ function VendorsTable({
                     <Store size={18} />
                   </div>
 
-                  <strong>{vendor.store}</strong>
+                  <strong>
+                    {vendor.store}
+                  </strong>
                 </div>
               </td>
 
-              <td>{vendor.owner}</td>
-
-              <td>{vendor.products}</td>
+              <td>
+                {vendor.owner}
+              </td>
 
               <td>
-                <strong>{vendor.sales}</strong>
+                {vendor.email || "—"}
+              </td>
+
+              <td>
+                {formatDate(
+                  vendor.createdAt
+                )}
               </td>
 
               <td>
@@ -78,10 +103,14 @@ function VendorsTable({
                   }
                 >
                   {vendor.isActive ? (
-                    <PowerOff size={17} />
+                    <PowerOff
+                      size={17}
+                    />
                   ) : (
                     <>
-                      <Power size={16} />
+                      <Power
+                        size={16}
+                      />
                       Activate
                     </>
                   )}

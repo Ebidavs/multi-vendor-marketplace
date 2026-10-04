@@ -1,4 +1,8 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import {
   Search,
   Store,
@@ -8,77 +12,153 @@ import {
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import VendorsTable from "../../components/dashboard/VendorsTable";
+
+import {
+  getAdminVendors,
+  updateVendorStatus,
+} from "../../services/api";
+
 import "./admin.css";
 
 function AdminVendors() {
-  const [vendors, setVendors] = useState([
-    {
-      id: 1,
-      store: "TechHub Store",
-      owner: "Michael James",
-      products: 15,
-      sales: "₦1,250,000",
-      isActive: true,
-    },
-    {
-      id: 2,
-      store: "Urban Fashion",
-      owner: "Daniel Thomas",
-      products: 28,
-      sales: "₦980,000",
-      isActive: true,
-    },
-    {
-      id: 3,
-      store: "Home Essentials",
-      owner: "Mary George",
-      products: 19,
-      sales: "₦720,500",
-      isActive: false,
-    },
-    {
-      id: 4,
-      store: "Beauty Corner",
-      owner: "Jennifer Paul",
-      products: 0,
-      sales: "₦0",
-      isActive: false,
-    },
-  ]);
+  const [vendors, setVendors] =
+    useState([]);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] =
+    useState("");
 
-  const updateStatus = (
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  useEffect(() => {
+    const loadVendors = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response =
+          await getAdminVendors();
+
+        const backendVendors =
+          response.data?.vendors || [];
+
+        const formattedVendors =
+          backendVendors.map(
+            (vendor) => ({
+              id:
+                vendor.id ||
+                vendor._id,
+
+              store:
+                vendor.shop?.name ||
+                "No shop created",
+
+              owner:
+                vendor.name ||
+                "Vendor",
+
+              email:
+                vendor.email || "",
+
+              isActive:
+                Boolean(
+                  vendor.isActive
+                ),
+
+              createdAt:
+                vendor.createdAt ||
+                null,
+            })
+          );
+
+        setVendors(
+          formattedVendors
+        );
+      } catch (err) {
+        console.error(
+          "Load vendors error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Failed to load vendors."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVendors();
+  }, []);
+
+  const updateStatus = async (
     vendorId,
     isActive
   ) => {
-    // Temporary frontend update.
-    // Later this will call the admin vendor status API.
-    setVendors((previousVendors) =>
-      previousVendors.map((vendor) =>
-        vendor.id === vendorId
-          ? {
-              ...vendor,
-              isActive,
-            }
-          : vendor
-      )
-    );
+    try {
+      setError("");
+
+      await updateVendorStatus(
+        vendorId,
+        isActive
+      );
+
+      setVendors(
+        (previousVendors) =>
+          previousVendors.map(
+            (vendor) =>
+              vendor.id === vendorId
+                ? {
+                    ...vendor,
+                    isActive,
+                  }
+                : vendor
+          )
+      );
+    } catch (err) {
+      console.error(
+        "Update vendor status error:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Failed to update vendor status."
+      );
+    }
   };
 
-  const filteredVendors = vendors.filter(
-    (vendor) =>
-      `${vendor.store} ${vendor.owner}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-  );
+  const filteredVendors =
+    vendors.filter((vendor) => {
+      const search =
+        searchTerm.toLowerCase();
 
-  const activeVendors = vendors.filter(
-    (vendor) => vendor.isActive
-  ).length;
+      return (
+        vendor.store
+          .toLowerCase()
+          .includes(search) ||
+        vendor.owner
+          .toLowerCase()
+          .includes(search) ||
+        vendor.email
+          .toLowerCase()
+          .includes(search)
+      );
+    });
+
+  const activeVendors =
+    vendors.filter(
+      (vendor) =>
+        vendor.isActive
+    ).length;
 
   const inactiveVendors =
-    vendors.length - activeVendors;
+    vendors.length -
+    activeVendors;
 
   return (
     <DashboardLayout role="admin">
@@ -88,8 +168,8 @@ function AdminVendors() {
             <h1>Vendors</h1>
 
             <p>
-              Review and manage sellers operating on
-              MarketHub.
+              Review and manage sellers
+              operating on MarketHub.
             </p>
           </div>
         </div>
@@ -125,27 +205,56 @@ function AdminVendors() {
                 placeholder="Search vendors..."
                 value={searchTerm}
                 onChange={(event) =>
-                  setSearchTerm(event.target.value)
+                  setSearchTerm(
+                    event.target.value
+                  )
                 }
               />
             </div>
           </div>
 
-          <VendorsTable
-            vendors={filteredVendors}
-            onStatusChange={updateStatus}
-          />
+          {error && (
+            <p className="login-error">
+              {error}
+            </p>
+          )}
 
-          {filteredVendors.length === 0 && (
+          {loading ? (
             <div className="empty-orders">
               <Store size={36} />
 
-              <h3>No vendors found</h3>
-
-              <p>
-                No vendors match your current search.
-              </p>
+              <h3>
+                Loading vendors...
+              </h3>
             </div>
+          ) : (
+            <>
+              <VendorsTable
+                vendors={
+                  filteredVendors
+                }
+                onStatusChange={
+                  updateStatus
+                }
+              />
+
+              {filteredVendors.length ===
+                0 && (
+                <div className="empty-orders">
+                  <Store size={36} />
+
+                  <h3>
+                    No vendors found
+                  </h3>
+
+                  <p>
+                    No vendors match
+                    your current
+                    search.
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </section>
       </section>
@@ -169,7 +278,10 @@ function MiniStat({
 
       <div>
         <span>{title}</span>
-        <strong>{value}</strong>
+
+        <strong>
+          {value}
+        </strong>
       </div>
     </article>
   );

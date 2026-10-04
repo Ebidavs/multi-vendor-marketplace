@@ -1,5 +1,10 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import {
   Plus,
   Search,
@@ -11,90 +16,169 @@ import {
 } from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+
+import {
+  deleteProduct,
+  getVendorProducts,
+} from "../../services/api";
+
 import "./vendor.css";
 
 function VendorProducts() {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
 
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Wireless Headphones",
-      category: "Electronics",
-      price: 45000,
-      stock: 24,
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Smart Watch",
-      category: "Electronics",
-      price: 85000,
-      stock: 12,
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Laptop Backpack",
-      category: "Fashion",
-      price: 28500,
-      stock: 5,
-      status: "Low Stock",
-    },
-    {
-      id: 4,
-      name: "Bluetooth Speaker",
-      category: "Electronics",
-      price: 32000,
-      stock: 0,
-      status: "Out of Stock",
-    },
-    {
-      id: 5,
-      name: "Running Sneakers",
-      category: "Fashion",
-      price: 58000,
-      stock: 18,
-      status: "Active",
-    },
-  ]);
+  const [searchTerm, setSearchTerm] =
+    useState("");
 
-  const filteredProducts = products.filter((product) =>
-    product.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  const [products, setProducts] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [deletingId, setDeletingId] =
+    useState(null);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setError("");
+
+        const storedUser =
+          localStorage.getItem("user");
+
+        if (!storedUser) {
+          throw new Error(
+            "Please log in as a vendor."
+          );
+        }
+
+        const user =
+          JSON.parse(storedUser);
+
+        const vendorId =
+          user._id || user.id;
+
+        if (!vendorId) {
+          throw new Error(
+            "Vendor information could not be found."
+          );
+        }
+
+        const response =
+          await getVendorProducts(
+            vendorId
+          );
+
+        setProducts(
+          response.data?.products ||
+            []
+        );
+      } catch (err) {
+        console.error(
+          "Load products error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Failed to load products."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const filteredProducts =
+    products.filter((product) =>
+      product.name
+        .toLowerCase()
+        .includes(
+          searchTerm.toLowerCase()
+        )
+    );
 
   const formatPrice = (price) => {
-    return `₦${price.toLocaleString()}`;
+    return `₦${Number(
+      price
+    ).toLocaleString()}`;
   };
 
-  const handleEditProduct = (productId) => {
-    navigate(`/vendor/products/${productId}/edit`);
+  const handleEditProduct = (
+    productId
+  ) => {
+    navigate(
+      `/vendor/products/${productId}/edit`
+    );
   };
 
-  const handleDeleteProduct = (productId) => {
-    const productToDelete = products.find(
-      (product) => product.id === productId
-    );
+  const handleDeleteProduct = async (
+    product
+  ) => {
+    const productId =
+      product.id || product._id;
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${productToDelete?.name}"?`
-    );
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to delete "${product.name}"?`
+      );
 
     if (!confirmed) {
       return;
     }
 
-    // Temporary frontend deletion.
-    // Later this will call DELETE /api/v1/products/:id.
-    setProducts((previousProducts) =>
-      previousProducts.filter(
-        (product) => product.id !== productId
-      )
-    );
+    try {
+      setDeletingId(productId);
+
+      await deleteProduct(
+        productId
+      );
+
+      setProducts(
+        (previous) =>
+          previous.filter(
+            (item) =>
+              (item.id ||
+                item._id) !==
+              productId
+          )
+      );
+
+      alert(
+        "Product deleted successfully."
+      );
+    } catch (err) {
+      console.error(
+        "Delete product error:",
+        err
+      );
+
+      alert(
+        err.message ||
+          "Failed to delete product."
+      );
+    } finally {
+      setDeletingId(null);
+    }
   };
+
+  const inStockProducts =
+    products.filter(
+      (product) =>
+        product.inStock
+    ).length;
+
+  const outOfStockProducts =
+    products.filter(
+      (product) =>
+        !product.inStock
+    ).length;
 
   return (
     <DashboardLayout role="vendor">
@@ -104,15 +188,19 @@ function VendorProducts() {
             <h1>Products</h1>
 
             <p>
-              Manage the products available in your marketplace
-              store.
+              Manage the products
+              available in your
+              marketplace store.
             </p>
           </div>
 
           <button
+            type="button"
             className="primary-dashboard-button"
             onClick={() =>
-              navigate("/vendor/products/new")
+              navigate(
+                "/vendor/products/new"
+              )
             }
           >
             <Plus size={18} />
@@ -127,8 +215,13 @@ function VendorProducts() {
             </div>
 
             <div>
-              <span>Total Products</span>
-              <strong>{products.length}</strong>
+              <span>
+                Total Products
+              </span>
+
+              <strong>
+                {products.length}
+              </strong>
             </div>
           </div>
 
@@ -138,15 +231,12 @@ function VendorProducts() {
             </div>
 
             <div>
-              <span>Active Products</span>
+              <span>
+                In Stock
+              </span>
 
               <strong>
-                {
-                  products.filter(
-                    (product) =>
-                      product.status === "Active"
-                  ).length
-                }
+                {inStockProducts}
               </strong>
             </div>
           </div>
@@ -157,16 +247,12 @@ function VendorProducts() {
             </div>
 
             <div>
-              <span>Low Stock</span>
+              <span>
+                Available
+              </span>
 
               <strong>
-                {
-                  products.filter(
-                    (product) =>
-                      product.stock > 0 &&
-                      product.stock <= 5
-                  ).length
-                }
+                {inStockProducts}
               </strong>
             </div>
           </div>
@@ -177,14 +263,12 @@ function VendorProducts() {
             </div>
 
             <div>
-              <span>Out of Stock</span>
+              <span>
+                Out of Stock
+              </span>
 
               <strong>
-                {
-                  products.filter(
-                    (product) => product.stock === 0
-                  ).length
-                }
+                {outOfStockProducts}
               </strong>
             </div>
           </div>
@@ -200,149 +284,264 @@ function VendorProducts() {
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(event) =>
-                  setSearchTerm(event.target.value)
+                  setSearchTerm(
+                    event.target.value
+                  )
                 }
               />
             </div>
 
-            <button className="filter-button">
+            <button
+              type="button"
+              className="filter-button"
+            >
               <Filter size={17} />
               Filter
             </button>
           </div>
 
-          <div className="table-wrapper">
-            <table className="products-table">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Stock</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+          {error && (
+            <p className="login-error">
+              {error}
+            </p>
+          )}
 
-              <tbody>
-                {filteredProducts.map((product) => (
-                  <tr key={product.id}>
-                    <td>
-                      <div className="product-table-info">
-                        <div className="product-image-placeholder">
-                          <Package size={20} />
-                        </div>
-
-                        <div>
-                          <strong>
-                            {product.name}
-                          </strong>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>{product.category}</td>
-
-                    <td className="product-price">
-                      {formatPrice(product.price)}
-                    </td>
-
-                    <td>
-                      <span
-                        className={
-                          product.stock === 0
-                            ? "stock-danger"
-                            : product.stock <= 5
-                              ? "stock-warning"
-                              : ""
-                        }
-                      >
-                        {product.stock}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span
-                        className={`product-status ${
-                          product.status
-                            .toLowerCase()
-                            .replaceAll(" ", "-")
-                        }`}
-                      >
-                        {product.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="product-actions">
-                        <button
-                          type="button"
-                          className="table-action-button"
-                          title="Edit product"
-                          onClick={() =>
-                            handleEditProduct(
-                              product.id
-                            )
-                          }
-                        >
-                          <Pencil size={16} />
-                        </button>
-
-                        <button
-                          type="button"
-                          className="table-action-button delete"
-                          title="Delete product"
-                          onClick={() =>
-                            handleDeleteProduct(
-                              product.id
-                            )
-                          }
-                        >
-                          <Trash2 size={16} />
-                        </button>
-
-                        <button
-                          type="button"
-                          className="table-action-button"
-                          title="More options"
-                        >
-                          <MoreVertical size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredProducts.length === 0 && (
+          {loading ? (
             <div className="empty-products">
               <Package size={35} />
 
-              <h3>No products found</h3>
-
-              <p>
-                We couldn't find a product matching your
-                search.
-              </p>
+              <h3>
+                Loading products...
+              </h3>
             </div>
+          ) : (
+            <>
+              <div className="table-wrapper">
+                <table className="products-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        Product
+                      </th>
+
+                      <th>
+                        Category
+                      </th>
+
+                      <th>
+                        Price
+                      </th>
+
+                      <th>
+                        Stock
+                      </th>
+
+                      <th>
+                        Status
+                      </th>
+
+                      <th>
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredProducts.map(
+                      (product) => {
+                        const productId =
+                          product.id ||
+                          product._id;
+
+                        const status =
+                          product.inStock
+                            ? "Active"
+                            : "Out of Stock";
+
+                        return (
+                          <tr
+                            key={
+                              productId
+                            }
+                          >
+                            <td>
+                              <div className="product-table-info">
+                                <div className="product-image-placeholder">
+                                  {product.image ? (
+                                    <img
+                                      src={
+                                        product.image
+                                      }
+                                      alt={
+                                        product.name
+                                      }
+                                    />
+                                  ) : (
+                                    <Package
+                                      size={
+                                        20
+                                      }
+                                    />
+                                  )}
+                                </div>
+
+                                <div>
+                                  <strong>
+                                    {
+                                      product.name
+                                    }
+                                  </strong>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td>
+                              {product.category ||
+                                "—"}
+                            </td>
+
+                            <td className="product-price">
+                              {formatPrice(
+                                product.price
+                              )}
+                            </td>
+
+                            <td>
+                              <span
+                                className={
+                                  product.inStock
+                                    ? ""
+                                    : "stock-danger"
+                                }
+                              >
+                                {product.inStock
+                                  ? "In stock"
+                                  : "Out of stock"}
+                              </span>
+                            </td>
+
+                            <td>
+                              <span
+                                className={`product-status ${status
+                                  .toLowerCase()
+                                  .replaceAll(
+                                    " ",
+                                    "-"
+                                  )}`}
+                              >
+                                {
+                                  status
+                                }
+                              </span>
+                            </td>
+
+                            <td>
+                              <div className="product-actions">
+                                <button
+                                  type="button"
+                                  className="table-action-button"
+                                  title="Edit product"
+                                  onClick={() =>
+                                    handleEditProduct(
+                                      productId
+                                    )
+                                  }
+                                >
+                                  <Pencil
+                                    size={
+                                      16
+                                    }
+                                  />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="table-action-button delete"
+                                  title="Delete product"
+                                  disabled={
+                                    deletingId ===
+                                    productId
+                                  }
+                                  onClick={() =>
+                                    handleDeleteProduct(
+                                      product
+                                    )
+                                  }
+                                >
+                                  <Trash2
+                                    size={
+                                      16
+                                    }
+                                  />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="table-action-button"
+                                  title="More options"
+                                >
+                                  <MoreVertical
+                                    size={
+                                      16
+                                    }
+                                  />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      }
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredProducts.length ===
+                0 && (
+                <div className="empty-products">
+                  <Package
+                    size={35}
+                  />
+
+                  <h3>
+                    No products found
+                  </h3>
+
+                  <p>
+                    No products match
+                    your current
+                    search.
+                  </p>
+                </div>
+              )}
+
+              <div className="table-pagination">
+                <span>
+                  Showing{" "}
+                  {
+                    filteredProducts.length
+                  }{" "}
+                  of{" "}
+                  {products.length}{" "}
+                  products
+                </span>
+
+                <div>
+                  <button disabled>
+                    Previous
+                  </button>
+
+                  <button className="pagination-active">
+                    1
+                  </button>
+
+                  <button disabled>
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
           )}
-
-          <div className="table-pagination">
-            <span>
-              Showing {filteredProducts.length} of{" "}
-              {products.length} products
-            </span>
-
-            <div>
-              <button disabled>Previous</button>
-              <button className="pagination-active">
-                1
-              </button>
-              <button>Next</button>
-            </div>
-          </div>
         </section>
       </section>
     </DashboardLayout>
