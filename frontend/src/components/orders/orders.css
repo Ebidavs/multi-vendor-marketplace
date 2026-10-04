@@ -1,0 +1,93 @@
+
+
+.ord-page { max-width: 760px; margin: 0 auto; padding: 24px 16px; color: #1F2937; font-family: Poppins, Inter, system-ui, sans-serif; }
+.ord-title { font-size: 22px; font-weight: 700; margin: 0 0 16px; }
+.ord-message { text-align: center; padding: 40px 0; color: #6B7280; }
+.ord-message--error { color: #dc2626; }
+.ord-back { font-size: 14px; color: #0F5132; text-decoration: none; }
+.ord-back:hover { text-decoration: underline; }
+
+/* filter bar */
+.ord-filter { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.ord-search { flex: 1; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: inherit; outline: none; }
+.ord-search:focus, .ord-textarea:focus { border-color: #0F5132; box-shadow: 0 0 0 2px rgba(15, 81, 50, 0.25); }
+.ord-filter-buttons { display: flex; gap: 8px; overflow-x: auto; }
+.ord-filter-btn { border: none; background: #F3F4F6; color: #374151; padding: 10px 14px; font-size: 12px; font-family: inherit; border-radius: 8px; cursor: pointer; white-space: nowrap; text-transform: capitalize; }
+.ord-filter-btn:hover { background: #e5e7eb; }
+.ord-filter-btn--active, .ord-filter-btn--active:hover { background: #0F5132; color: #fff; }
+
+/* order card */
+.ord-card { display: block; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; text-decoration: none; color: inherit; transition: box-shadow 0.2s; }
+.ord-card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+.ord-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.ord-card-id { font-size: 14px; font-weight: 600; margin: 0; }
+.ord-card-date { font-size: 12px; color: #6B7280; margin: 2px 0 0; }
+.ord-card-bottom { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.ord-card-count { color: #6B7280; }
+.ord-card-total { font-weight: 600; }
+
+/* status badge */
+.ord-badge { display: inline-block; padding: 4px 12px; font-size: 12px; font-weight: 500; border-radius: 999px; border: 1px solid; text-transform: capitalize; }
+.ord-badge--pending { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.ord-badge--processing { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.ord-badge--shipped { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+.ord-badge--delivered { background: rgba(16, 185, 129, 0.1); color: #0F5132; border-color: rgba(16, 185, 129, 0.4); }
+.ord-badge--cancelled { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.ord-badge--default { background: #f3f4f6; color: #1f2937; border-color: #d1d5db; }
+
+/* progress tracker */
+.ord-tracker { display: flex; align-items: center; width: 100%; margin: 24px 0; }
+.ord-step { display: flex; flex-direction: column; align-items: center; text-align: center; width: 64px; }
+.ord-step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; background: #e5e7eb; color: #6b7280; }
+.ord-step-circle--done { background: #0F5132; color: #fff; }
+.ord-step-label { margin-top: 8px; font-size: 11px; text-transform: capitalize; color: #9ca3af; }
+.ord-step-label--done { color: #1F2937; font-weight: 500; }
+.ord-line { flex: 1; height: 4px; background: #e5e7eb; }
+.ord-line--done { background: #0F5132; }
+
+/* items list */
+.ord-items { border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; }
+.ord-item { display: flex; align-items: center; gap: 16px; padding: 12px; }
+.ord-item + .ord-item { border-top: 1px solid #e5e7eb; }
+.ord-item-img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb; flex-shrink: 0; }
+.ord-item-info { flex: 1; min-width: 0; }
+.ord-item-name { font-size: 14px; font-weight: 500; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ord-item-meta { font-size: 12px; color: #6B7280; margin: 2px 0 0; }
+.ord-item-price { font-size: 14px; font-weight: 600; white-space: nowrap; }
+.ord-no-items { font-size: 14px; color: #6B7280; }
+
+/* tracking page */
+.ord-header { display: flex; justify-content: space-between; align-items: flex-start; margin: 12px 0 16px; }
+.ord-header h1 { font-size: 18px; font-weight: 700; margin: 0; }
+.ord-subtitle { font-size: 12px; color: #6B7280; margin: 2px 0 0; }
+.ord-section-title { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
+.ord-total-row { display: flex; justify-content: space-between; font-size: 14px; margin: 16px 0 24px; }
+.ord-total-row strong { font-weight: 600; }
+.ord-review-item { margin-bottom: 16px; }
+.ord-reviewed { font-size: 14px; color: #0F5132; margin: 0 0 16px; }
+.ord-review-product { font-size: 12px; color: #6B7280; margin: 0 0 4px; }
+
+/* review form */
+.ord-review { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; background: #f9fafb; }
+.ord-review-title { font-size: 14px; font-weight: 500; margin: 0 0 8px; }
+.ord-stars { display: flex; gap: 4px; margin-bottom: 12px; }
+.ord-star { background: none; border: none; font-size: 24px; line-height: 1; color: #d1d5db; cursor: pointer; padding: 0; }
+.ord-star--on { color: #F59E0B; }
+.ord-textarea { width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: inherit; margin-bottom: 4px; outline: none; resize: vertical; }
+.ord-error { font-size: 12px; color: #dc2626; margin: 0 0 8px; }
+.ord-btn { display: inline-block; background: #0F5132; color: #fff; border: none; font-size: 14px; padding: 10px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; font-family: inherit; }
+.ord-btn:hover { background: #0a3d26; }
+.ord-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ord-review .ord-btn { margin-top: 8px; }
+
+/* empty state */
+.ord-empty { text-align: center; padding: 64px 0; }
+.ord-empty-icon { font-size: 48px; margin-bottom: 16px; }
+.ord-empty h3 { font-size: 18px; font-weight: 600; margin: 0 0 4px; }
+.ord-empty p { font-size: 14px; color: #6B7280; margin: 0 0 16px; }
+
+@media (min-width: 640px) {
+  .ord-filter { flex-direction: row; }
+  .ord-step { width: 80px; }
+  .ord-step-label { font-size: 12px; }
+}
