@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Route, Routes, useNavigate } from "react-router-dom";
 import Home from "./pages/Home";
-import Products from "./pages/products";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import OrderTrackingPage from "./pages/OrderTrackingPage";
 import Login from "./pages/login";
@@ -15,6 +14,8 @@ import CategoryBar from "./components/CategoryBar";
 import FilterSidebar from "./components/FilterSidebar";
 import ProductGrid from "./components/ProductGrid";
 import CartBar from "./components/CartBar";
+import CartPage from "./components/CartPage";
+import Checkout from "./components/Checkout";
 import ProductDetail from "./components/ProductDetail";
 import VendorDetail from "./components/VendorDetail";
 import { useCart } from "./hooks/useCart";
@@ -28,6 +29,7 @@ const getPageSize = () => {
 };
 
 export default function App() {
+  const navigate = useNavigate();
   const [products] = useState(dummyProducts);
   const [cartViewed, setCartViewed] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -203,6 +205,7 @@ export default function App() {
         onIncreaseQuantity={handleIncreaseQuantity}
         onDecreaseQuantity={handleDecreaseQuantity}
         onRemoveItem={handleRemoveItem}
+        onCheckout={() => navigate("/checkout")}
       />
     </main>
   );
@@ -230,17 +233,18 @@ export default function App() {
         <Route
           path="/cart"
           element={
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-              <h1 className="mb-6 text-2xl font-bold text-gray-900">Your Cart</h1>
-              <CartBar
-                cartItems={cartItems}
-                onClearCart={handleClearCart}
-                onIncreaseQuantity={increaseQuantity}
-                onDecreaseQuantity={handleDecreaseQuantity}
-                onRemoveItem={handleRemoveItem}
-              />
-            </main>
+            <CartPage
+              cartItems={cartItems}
+              onClearCart={handleClearCart}
+              onIncreaseQuantity={increaseQuantity}
+              onDecreaseQuantity={handleDecreaseQuantity}
+              onRemoveItem={handleRemoveItem}
+            />
           }
+        />
+        <Route
+          path="/checkout"
+          element={<Checkout cartItems={cartItems} onClearCart={handleClearCart} />}
         />
         <Route
           path="/products/:id"
