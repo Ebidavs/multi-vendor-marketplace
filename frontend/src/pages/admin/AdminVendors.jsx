@@ -4,10 +4,10 @@ import {
   Store,
   BadgeCheck,
   Clock,
-  MoreVertical,
 } from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import VendorsTable from "../../components/dashboard/VendorsTable";
 import "./admin.css";
 
 function AdminVendors() {
@@ -18,7 +18,7 @@ function AdminVendors() {
       owner: "Michael James",
       products: 15,
       sales: "₦1,250,000",
-      status: "Approved",
+      isActive: true,
     },
     {
       id: 2,
@@ -26,7 +26,7 @@ function AdminVendors() {
       owner: "Daniel Thomas",
       products: 28,
       sales: "₦980,000",
-      status: "Approved",
+      isActive: true,
     },
     {
       id: 3,
@@ -34,7 +34,7 @@ function AdminVendors() {
       owner: "Mary George",
       products: 19,
       sales: "₦720,500",
-      status: "Pending",
+      isActive: false,
     },
     {
       id: 4,
@@ -42,27 +42,43 @@ function AdminVendors() {
       owner: "Jennifer Paul",
       products: 0,
       sales: "₦0",
-      status: "Pending",
+      isActive: false,
     },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const updateStatus = (vendorId, status) => {
-    setVendors((previous) =>
-      previous.map((vendor) =>
+  const updateStatus = (
+    vendorId,
+    isActive
+  ) => {
+    // Temporary frontend update.
+    // Later this will call the admin vendor status API.
+    setVendors((previousVendors) =>
+      previousVendors.map((vendor) =>
         vendor.id === vendorId
-          ? { ...vendor, status }
+          ? {
+              ...vendor,
+              isActive,
+            }
           : vendor
       )
     );
   };
 
-  const filteredVendors = vendors.filter((vendor) =>
-    `${vendor.store} ${vendor.owner}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
+  const filteredVendors = vendors.filter(
+    (vendor) =>
+      `${vendor.store} ${vendor.owner}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
   );
+
+  const activeVendors = vendors.filter(
+    (vendor) => vendor.isActive
+  ).length;
+
+  const inactiveVendors =
+    vendors.length - activeVendors;
 
   return (
     <DashboardLayout role="admin">
@@ -70,6 +86,7 @@ function AdminVendors() {
         <div className="admin-page-heading">
           <div>
             <h1>Vendors</h1>
+
             <p>
               Review and manage sellers operating on
               MarketHub.
@@ -81,20 +98,20 @@ function AdminVendors() {
           <MiniStat
             icon={Store}
             title="Total Vendors"
-            value="184"
+            value={vendors.length}
           />
 
           <MiniStat
             icon={BadgeCheck}
-            title="Approved"
-            value="172"
+            title="Active"
+            value={activeVendors}
             type="blue"
           />
 
           <MiniStat
             icon={Clock}
-            title="Pending Approval"
-            value="12"
+            title="Inactive"
+            value={inactiveVendors}
             type="orange"
           />
         </div>
@@ -114,71 +131,22 @@ function AdminVendors() {
             </div>
           </div>
 
-          <div className="admin-table-wrapper">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Store</th>
-                  <th>Owner</th>
-                  <th>Products</th>
-                  <th>Total Sales</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+          <VendorsTable
+            vendors={filteredVendors}
+            onStatusChange={updateStatus}
+          />
 
-              <tbody>
-                {filteredVendors.map((vendor) => (
-                  <tr key={vendor.id}>
-                    <td>
-                      <div className="admin-user-cell">
-                        <div className="admin-store-avatar">
-                          <Store size={18} />
-                        </div>
+          {filteredVendors.length === 0 && (
+            <div className="empty-orders">
+              <Store size={36} />
 
-                        <strong>{vendor.store}</strong>
-                      </div>
-                    </td>
+              <h3>No vendors found</h3>
 
-                    <td>{vendor.owner}</td>
-                    <td>{vendor.products}</td>
-
-                    <td>
-                      <strong>{vendor.sales}</strong>
-                    </td>
-
-                    <td>
-                      <span
-                        className={`admin-status ${vendor.status.toLowerCase()}`}
-                      >
-                        {vendor.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      {vendor.status === "Pending" ? (
-                        <button
-                          className="approve-vendor-button"
-                          onClick={() =>
-                            updateStatus(
-                              vendor.id,
-                              "Approved"
-                            )
-                          }
-                        >
-                          Approve
-                        </button>
-                      ) : (
-                        <button className="admin-icon-button">
-                          <MoreVertical size={17} />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              <p>
+                No vendors match your current search.
+              </p>
+            </div>
+          )}
         </section>
       </section>
     </DashboardLayout>
@@ -193,7 +161,9 @@ function MiniStat({
 }) {
   return (
     <article className="admin-mini-stat">
-      <div className={`admin-mini-icon ${type}`}>
+      <div
+        className={`admin-mini-icon ${type}`}
+      >
         <Icon size={21} />
       </div>
 

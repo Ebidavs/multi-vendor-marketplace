@@ -6,14 +6,15 @@ import {
   Clock,
   Truck,
   CheckCircle2,
-  Eye,
 } from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import OrdersTable from "../../components/dashboard/OrdersTable";
 import "./vendor.css";
 
 function VendorOrders() {
   const navigate = useNavigate();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
@@ -52,7 +53,7 @@ function VendorOrders() {
       quantity: 1,
       amount: "₦32,000",
       date: "Sep 28, 2026",
-      status: "Cancelled",
+      status: "Pending",
     },
     {
       id: "#MKT1020",
@@ -65,12 +66,28 @@ function VendorOrders() {
     },
   ]);
 
-  const handleStatusChange = (orderId, newStatus) => {
+  const handleStatusChange = (
+    orderId,
+    newStatus
+  ) => {
+    // Temporary frontend update.
+    // Later this will call the backend status endpoint.
     setOrders((previousOrders) =>
       previousOrders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order,
-      ),
+        order.id === orderId
+          ? {
+              ...order,
+              status: newStatus,
+            }
+          : order
+      )
     );
+  };
+
+  const handleViewOrder = (order) => {
+    const orderId = order.id.replace("#", "");
+
+    navigate(`/vendor/orders/${orderId}`);
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -82,10 +99,23 @@ function VendorOrders() {
       order.product.toLowerCase().includes(search);
 
     const matchesStatus =
-      statusFilter === "All" || order.status === statusFilter;
+      statusFilter === "All" ||
+      order.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
+
+  const pendingOrders = orders.filter(
+    (order) => order.status === "Pending"
+  ).length;
+
+  const shippedOrders = orders.filter(
+    (order) => order.status === "Shipped"
+  ).length;
+
+  const deliveredOrders = orders.filter(
+    (order) => order.status === "Delivered"
+  ).length;
 
   return (
     <DashboardLayout role="vendor">
@@ -93,7 +123,11 @@ function VendorOrders() {
         <div className="dashboard-page-heading">
           <div>
             <h1>Orders</h1>
-            <p>Manage and track orders placed with your store.</p>
+
+            <p>
+              Manage and track orders placed with your
+              store.
+            </p>
           </div>
         </div>
 
@@ -105,7 +139,7 @@ function VendorOrders() {
 
             <div>
               <span>Total Orders</span>
-              <strong>42</strong>
+              <strong>{orders.length}</strong>
             </div>
           </div>
 
@@ -116,7 +150,7 @@ function VendorOrders() {
 
             <div>
               <span>Pending</span>
-              <strong>6</strong>
+              <strong>{pendingOrders}</strong>
             </div>
           </div>
 
@@ -127,7 +161,7 @@ function VendorOrders() {
 
             <div>
               <span>Shipped</span>
-              <strong>8</strong>
+              <strong>{shippedOrders}</strong>
             </div>
           </div>
 
@@ -138,7 +172,7 @@ function VendorOrders() {
 
             <div>
               <span>Delivered</span>
-              <strong>28</strong>
+              <strong>{deliveredOrders}</strong>
             </div>
           </div>
         </div>
@@ -152,125 +186,50 @@ function VendorOrders() {
                 type="text"
                 placeholder="Search order, customer or product..."
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
               />
             </div>
 
             <select
               className="order-status-filter"
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
+              onChange={(event) =>
+                setStatusFilter(event.target.value)
+              }
             >
               <option value="All">All Orders</option>
               <option value="Pending">Pending</option>
-              <option value="Processing">Processing</option>
+              <option value="Processing">
+                Processing
+              </option>
               <option value="Shipped">Shipped</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="Delivered">
+                Delivered
+              </option>
             </select>
           </div>
 
-          <div className="table-wrapper">
-            <table className="vendor-orders-table">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Customer</th>
-                  <th>Product</th>
-                  <th>Qty</th>
-                  <th>Amount</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="vendor-order-id">{order.id}</td>
-
-                    <td>
-                      <div className="order-customer">
-                        <div className="customer-avatar">
-                          {order.customer
-                            .split(" ")
-                            .map((name) => name[0])
-                            .join("")
-                            .slice(0, 2)}
-                        </div>
-
-                        <span>{order.customer}</span>
-                      </div>
-                    </td>
-
-                    <td>{order.product}</td>
-
-                    <td>{order.quantity}</td>
-
-                    <td className="vendor-order-amount">{order.amount}</td>
-
-                    <td>{order.date}</td>
-
-                    <td>
-                      <select
-                        className={`order-status-select ${order.status.toLowerCase()}`}
-                        value={order.status}
-                        onChange={(event) =>
-                          handleStatusChange(order.id, event.target.value)
-                        }
-                      >
-                        <option value="Pending">Pending</option>
-
-                        <option value="Processing">Processing</option>
-
-                        <option value="Shipped">Shipped</option>
-
-                        <option value="Delivered">Delivered</option>
-
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </td>
-
-                    <td>
-                      <button
-                        className="view-order-button"
-                        title="View order"
-                        onClick={() =>
-                          navigate(
-                            `/vendor/orders/${order.id.replace("#", "")}`,
-                          )
-                        }
-                      >
-                        <Eye size={17} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredOrders.length === 0 && (
-            <div className="empty-orders">
-              <ShoppingBag size={36} />
-
-              <h3>No orders found</h3>
-
-              <p>No orders match your current search or filter.</p>
-            </div>
-          )}
+          <OrdersTable
+            orders={filteredOrders}
+            onStatusChange={handleStatusChange}
+            onViewOrder={handleViewOrder}
+          />
 
           <div className="table-pagination">
-            <span>Showing {filteredOrders.length} of 42 orders</span>
+            <span>
+              Showing {filteredOrders.length} of{" "}
+              {orders.length} orders
+            </span>
 
             <div>
               <button disabled>Previous</button>
 
-              <button className="pagination-active">1</button>
+              <button className="pagination-active">
+                1
+              </button>
 
-              <button>2</button>
-              <button>3</button>
               <button>Next</button>
             </div>
           </div>

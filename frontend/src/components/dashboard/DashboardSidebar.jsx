@@ -19,34 +19,107 @@ import { NavLink } from "react-router-dom";
 
 function DashboardSidebar({ role = "vendor", isOpen, onClose }) {
   const vendorLinks = [
-    { name: "Overview", icon: LayoutDashboard, path: "/vendor" },
-    { name: "Products", icon: Package, path: "/vendor/products" },
-    { name: "Orders", icon: ShoppingBag, path: "/vendor/orders" },
-    { name: "Customers", icon: Users, path: "/vendor/customers" },
-    { name: "Analytics", icon: BarChart3, path: "/vendor/analytics" },
-    { name: "Store Profile", icon: Store, path: "/vendor/store" },
-    { name: "Reviews", icon: Star, path: "/vendor/reviews" },
-    { name: "Settings", icon: Settings, path: "/vendor/settings" },
+    {
+      name: "Overview",
+      icon: LayoutDashboard,
+      path: "/vendor/dashboard",
+    },
+    {
+      name: "Products",
+      icon: Package,
+      path: "/vendor/products",
+    },
+    {
+      name: "Orders",
+      icon: ShoppingBag,
+      path: "/vendor/orders",
+    },
+    {
+      name: "Customers",
+      icon: Users,
+      path: "/vendor/customers",
+    },
+    {
+      name: "Analytics",
+      icon: BarChart3,
+      path: "/vendor/analytics",
+    },
+    {
+      name: "Store Profile",
+      icon: Store,
+      path: "/vendor/profile",
+    },
+    {
+      name: "Reviews",
+      icon: Star,
+      path: "/vendor/reviews",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/vendor/settings",
+    },
   ];
 
   const adminLinks = [
-    { name: "Overview", icon: LayoutDashboard, path: "/admin" },
-    { name: "Users", icon: Users, path: "/admin/users" },
-    { name: "Vendors", icon: Store, path: "/admin/vendors" },
-    { name: "Products", icon: Package, path: "/admin/products" },
-    { name: "Categories", icon: Tags, path: "/admin/categories" },
-    { name: "Orders", icon: ShoppingBag, path: "/admin/orders" },
-    { name: "Reports", icon: FileChartColumn, path: "/admin/reports" },
-    { name: "Settings", icon: Settings, path: "/admin/settings" },
+    {
+      name: "Overview",
+      icon: LayoutDashboard,
+      path: "/admin/dashboard",
+    },
+    {
+      name: "Users",
+      icon: Users,
+      path: "/admin/users",
+    },
+    {
+      name: "Vendors",
+      icon: Store,
+      path: "/admin/vendors",
+    },
+    {
+      name: "Products",
+      icon: Package,
+      path: "/admin/products",
+    },
+    {
+      name: "Categories",
+      icon: Tags,
+      path: "/admin/categories",
+    },
+    {
+      name: "Orders",
+      icon: ShoppingBag,
+      path: "/admin/orders",
+    },
+    {
+      name: "Reports",
+      icon: FileChartColumn,
+      path: "/admin/reports",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      path: "/admin/settings",
+    },
   ];
 
   const links = role === "admin" ? adminLinks : vendorLinks;
 
   return (
     <>
-      {isOpen && <div className="sidebar-overlay" onClick={onClose}></div>}
+      {isOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={onClose}
+        ></div>
+      )}
 
-      <aside className={`dashboard-sidebar ${isOpen ? "sidebar-open" : ""}`}>
+      <aside
+        className={`dashboard-sidebar ${
+          isOpen ? "sidebar-open" : ""
+        }`}
+      >
         <div className="sidebar-brand">
           <div className="brand-icon">
             <ShoppingBag size={22} />
@@ -54,7 +127,10 @@ function DashboardSidebar({ role = "vendor", isOpen, onClose }) {
 
           <span>MarketHub</span>
 
-          <button className="sidebar-close" onClick={onClose}>
+          <button
+            className="sidebar-close"
+            onClick={onClose}
+          >
             <X size={22} />
           </button>
         </div>
@@ -80,9 +156,14 @@ function DashboardSidebar({ role = "vendor", isOpen, onClose }) {
             return (
               <NavLink
                 to={link.path}
-                end={link.path === "/vendor" || link.path === "/admin"}
+                end={
+                  link.path === "/vendor/dashboard" ||
+                  link.path === "/admin/dashboard"
+                }
                 className={({ isActive }) =>
-                  `sidebar-link ${isActive ? "active" : ""}`
+                  `sidebar-link ${
+                    isActive ? "active" : ""
+                  }`
                 }
                 key={link.name}
                 onClick={onClose}

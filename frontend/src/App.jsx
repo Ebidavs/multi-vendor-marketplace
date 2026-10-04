@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/login";
@@ -16,6 +16,7 @@ import VendorAnalytics from "./pages/vendor/VendorAnalytics";
 import VendorStoreProfile from "./pages/vendor/VendorStoreProfile";
 import VendorReviews from "./pages/vendor/VendorReviews";
 import VendorSettings from "./pages/vendor/VendorSettings";
+import EditProduct from "./pages/vendor/EditProduct";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -37,42 +38,116 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Vendor Routes */}
-      <Route path="/vendor" element={<VendorDashboard />} />
 
-      <Route path="/vendor/products" element={<VendorProducts />} />
+      {/* Redirect old vendor route to PRD route */}
+      <Route
+        path="/vendor"
+        element={<Navigate to="/vendor/dashboard" replace />}
+      />
 
-      <Route path="/vendor/products/add" element={<AddProduct />} />
+      <Route
+        path="/vendor/dashboard"
+        element={<VendorDashboard />}
+      />
 
-      <Route path="/vendor/orders" element={<VendorOrders />} />
+      <Route
+        path="/vendor/products"
+        element={<VendorProducts />}
+      />
 
-      <Route path="/vendor/orders/:orderId" element={<VendorOrderDetails />} />
+      <Route
+        path="/vendor/products/new"
+        element={<AddProduct />}
+      />
+      <Route
+        path="/vendor/products/:id/edit"
+        element={<EditProduct />}
+      />
 
-      <Route path="/vendor/customers" element={<VendorCustomers />} />
+      <Route
+        path="/vendor/orders"
+        element={<VendorOrders />}
+      />
 
-      <Route path="/vendor/analytics" element={<VendorAnalytics />} />
+      <Route
+        path="/vendor/orders/:orderId"
+        element={<VendorOrderDetails />}
+      />
 
-      <Route path="/vendor/store" element={<VendorStoreProfile />} />
+      <Route
+        path="/vendor/profile"
+        element={<VendorStoreProfile />}
+      />
 
-      <Route path="/vendor/reviews" element={<VendorReviews />} />
+      {/* Extra Vendor Pages */}
+      <Route
+        path="/vendor/customers"
+        element={<VendorCustomers />}
+      />
 
-      <Route path="/vendor/settings" element={<VendorSettings />} />
+      <Route
+        path="/vendor/analytics"
+        element={<VendorAnalytics />}
+      />
+
+      <Route
+        path="/vendor/reviews"
+        element={<VendorReviews />}
+      />
+
+      <Route
+        path="/vendor/settings"
+        element={<VendorSettings />}
+      />
 
       {/* Admin Routes */}
-      <Route path="/admin" element={<AdminDashboard />} />
 
-      <Route path="/admin/users" element={<AdminUsers />} />
+      {/* Redirect old admin route to PRD route */}
+      <Route
+        path="/admin"
+        element={<Navigate to="/admin/dashboard" replace />}
+      />
 
-      <Route path="/admin/vendors" element={<AdminVendors />} />
+      <Route
+        path="/admin/dashboard"
+        element={<AdminDashboard />}
+      />
 
-      <Route path="/admin/products" element={<AdminProducts />} />
+      <Route
+        path="/admin/vendors"
+        element={<AdminVendors />}
+      />
 
-      <Route path="/admin/categories" element={<AdminCategories />} />
+      {/* Extra Admin Pages */}
+      <Route
+        path="/admin/users"
+        element={<AdminUsers />}
+      />
 
-      <Route path="/admin/orders" element={<AdminOrders />} />
+      <Route
+        path="/admin/products"
+        element={<AdminProducts />}
+      />
 
-      <Route path="/admin/reports" element={<AdminReports />} />
+      <Route
+        path="/admin/categories"
+        element={<AdminCategories />}
+      />
 
-      <Route path="/admin/settings" element={<AdminSettings />} />
+      <Route
+        path="/admin/orders"
+        element={<AdminOrders />}
+      />
+
+      <Route
+        path="/admin/reports"
+        element={<AdminReports />}
+      />
+
+      <Route
+        path="/admin/settings"
+        element={<AdminSettings />}
+      />
     </Routes>
   );
 }

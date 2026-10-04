@@ -7,35 +7,19 @@ import {
 } from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import AdminOverview from "../../components/dashboard/AdminOverview";
 import "./admin.css";
 
 function AdminDashboard() {
-  const stats = [
-    {
-      title: "Total Revenue",
-      value: "₦8,450,000",
-      change: "+14.2%",
-      currency: true,
-    },
-    {
-      title: "Total Users",
-      value: "2,481",
-      change: "+12.5%",
-      icon: Users,
-    },
-    {
-      title: "Active Vendors",
-      value: "184",
-      change: "+8.4%",
-      icon: Store,
-    },
-    {
-      title: "Total Orders",
-      value: "1,327",
-      change: "+16.8%",
-      icon: ShoppingBag,
-    },
-  ];
+  // Temporary data.
+  // Later this will come from GET /api/v1/admin/analytics.
+  const analytics = {
+    totalUsers: 2481,
+    totalVendors: 184,
+    totalCustomers: 2297,
+    totalShops: 180,
+    totalProducts: 1845,
+  };
 
   const recentOrders = [
     {
@@ -91,47 +75,14 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <div className="admin-stats-grid">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-
-            return (
-              <article
-                className="admin-stat-card"
-                key={stat.title}
-              >
-                <div className="admin-stat-top">
-                  <div className="admin-stat-icon">
-                    {stat.currency ? (
-                      <span>₦</span>
-                    ) : (
-                      <Icon size={22} />
-                    )}
-                  </div>
-
-                  <span className="admin-stat-change">
-                    {stat.change}
-                  </span>
-                </div>
-
-                <span className="admin-stat-title">
-                  {stat.title}
-                </span>
-
-                <strong>{stat.value}</strong>
-
-                <small>Compared to last month</small>
-              </article>
-            );
-          })}
-        </div>
+        <AdminOverview stats={analytics} />
 
         <div className="admin-dashboard-grid">
           <section className="admin-panel admin-performance">
             <div className="admin-panel-heading">
               <div>
                 <h2>Marketplace Performance</h2>
-                <p>Revenue performance this week</p>
+                <p>Platform activity this week</p>
               </div>
 
               <TrendingUp size={20} />
@@ -176,29 +127,29 @@ function AdminDashboard() {
             <div className="admin-summary-list">
               <Summary
                 icon={Store}
-                title="Pending Vendors"
-                value="12"
+                title="Total Shops"
+                value={analytics.totalShops}
                 type="green"
               />
 
               <Summary
                 icon={Package}
-                title="Active Products"
-                value="1,845"
+                title="Total Products"
+                value={analytics.totalProducts}
                 type="blue"
               />
 
               <Summary
                 icon={Users}
-                title="New Customers"
-                value="86"
+                title="Total Customers"
+                value={analytics.totalCustomers}
                 type="orange"
               />
 
               <Summary
                 icon={ShoppingBag}
-                title="Pending Orders"
-                value="38"
+                title="Recent Orders"
+                value={recentOrders.length}
                 type="purple"
               />
             </div>
@@ -209,6 +160,7 @@ function AdminDashboard() {
           <div className="admin-panel-heading">
             <div>
               <h2>Recent Orders</h2>
+
               <p>
                 Latest transactions across MarketHub
               </p>
