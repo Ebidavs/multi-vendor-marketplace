@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Building2, Check, CreditCard, LockKeyhole, Pencil, Truck, Zap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { addServerCartItem, clearServerCart, createOrder } from "../services/api";
+import { toOrderPayload } from "../services/mappers";
 
+const USE_API = import.meta.env.VITE_USE_API === "true";
 const DELIVERY_FEE = 5000;
 const formatPrice = (price) => `₦${price.toLocaleString()}`;
 const steps = ["Delivery", "Payment", "Review"];
@@ -32,19 +35,39 @@ export default function Checkout({ cartItems, onClearCart }) {
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [delivery, setDelivery] = useState({ name: "", phone: "", address: "", state: "", city: "" });
   const [orderNumber, setOrderNumber] = useState("");
+  const [orders, setOrders] = useState([]);
+  const [error, setError] = useState("");
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + (subtotal > 0 ? DELIVERY_FEE : 0);
 
   useEffect(() => {
-    if (screen !== "processing") return undefined;
+    if (screen !== "processing" || USE_API) return undefined;
     const timer = window.setTimeout(() => setScreen("success"), 900);
     return () => window.clearTimeout(timer);
   }, [screen]);
 
-  const placeOrder = () => {
-    setOrderNumber(`MH-${Math.floor(10000 + Math.random() * 89999)}`);
-    onClearCart();
+  const placeOrder = async () => {
+    setError("");
+    if (!USE_API) {
+      setOrderNumber(`MH-${Math.floor(10000 + Math.random() * 89999)}`);
+      onClearCart();
+      setScreen("processing");
+      return;
+    }
     setScreen("processing");
+    try {
+      await clearServerCart();
+      for (const item of cartItems) {
+        await addServerCartItem(item.id, item.quantity);
+      }
+      const data = await createOrder(toOrderPayload(delivery, paymentMethod));
+      setOrders(data.orders);
+      onClearCart();
+      setScreen("success");
+    } catch (err) {
+      setError(err.status === 401 ? "Please log in to place your order." : err.message);
+      setScreen("checkout");
+    }
   };
 
   if (cartItems.length === 0 && screen === "checkout") {
@@ -71,7 +94,17 @@ export default function Checkout({ cartItems, onClearCart }) {
       <main className="mx-auto flex min-h-[65vh] max-w-lg flex-col items-center justify-center px-4 text-center">
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><Check className="h-9 w-9" /></span>
         <h1 className="mt-6 text-2xl font-bold text-gray-900">Your order is confirmed</h1>
-        <p className="mt-2 text-gray-600">Order {orderNumber}</p>
+        {orders.length > 0 ? (
+          <ul className="mt-3 space-y-1 text-gray-600">
+            {orders.map((order) => (
+              <li key={order.orderId}>
+                {order.vendorName}: {order.itemCount} item(s), {formatPrice(order.totalAmount)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-gray-600">Order {orderNumber}</p>
+        )}
         <p className="mt-1 text-sm text-gray-500">Your order details have been saved.</p>
         <Link to="/products" className="mt-8 rounded-md bg-emerald-700 px-5 py-3 font-semibold text-white hover:bg-emerald-800">Continue Shopping</Link>
       </main>
@@ -183,6 +216,7 @@ export default function Checkout({ cartItems, onClearCart }) {
           </section>
         </div>
 
+        {error && <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         <div className="sticky bottom-0 -mx-4 border-t border-gray-200 bg-white p-4 sm:-mx-6 sm:px-6">
           <button type="submit" className="w-full rounded-md bg-emerald-700 px-4 py-3 font-semibold text-white hover:bg-emerald-800">
             {step === 0 ? "Continue to Payment" : step === 1 ? "Continue to Review" : `Place Order · ${formatPrice(total)}`}
