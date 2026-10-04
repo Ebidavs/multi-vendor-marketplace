@@ -1,5 +1,7 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import xiMarketLogo from "../assets/xi-market-logo.png";
 
 export default function Navbar({ cartCount = 0, onCartClick }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -10,9 +12,14 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
         {/* Logo */}
         <Link
           to="/"
-          className="text-xl font-bold tracking-tight text-white transition-colors hover:text-emerald-100 sm:text-2xl"
+          className="flex items-center gap-2 whitespace-nowrap text-xl font-bold tracking-tight text-white transition-colors hover:text-emerald-100 sm:text-2xl"
         >
-          Marketplace
+          <img
+            src={xiMarketLogo}
+            alt="Xi Market logo"
+            className="h-8 w-16 shrink-0 object-contain sm:h-9 sm:w-[72px]"
+          />
+          <span>Xi Market</span>
         </Link>
 
         {/* Navigation Links & Cart Icon */}

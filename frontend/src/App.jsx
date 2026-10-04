@@ -4,6 +4,11 @@ import Home from "./pages/Home";
 import Products from "./pages/products";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import OrderTrackingPage from "./pages/OrderTrackingPage";
+import Login from "./pages/login";
+import Register from "./pages/register";
+import ForgotPassword from "./pages/forgot-password";
+import ResetPassword from "./pages/ResetPassword";
+
 import Navbar from "./components/Navbar";
 import SearchBar from "./components/SearchBar";
 import CategoryBar from "./components/CategoryBar";
@@ -75,9 +80,6 @@ export default function App() {
     (_, index) => firstVisiblePage + index
   );
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filteredProducts, pageSize]);
 
   useEffect(() => {
     const updatePageSize = () => setPageSize(getPageSize());
@@ -217,9 +219,14 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={marketplacePage} />
+        <Route path="/login"element={<Login />} />
         <Route path="/marketplace" element={marketplacePage} />
         <Route path="/orders" element={<OrderHistoryPage />} />
         <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
+        <Route path="/register"element={<Register />} />
+        <Route path="/forgot-password"element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
         <Route
           path="/cart"
           element={
@@ -277,6 +284,5 @@ export default function App() {
           }
         />
       </Routes>
-    </div>
-  );
+    </div>);
 }
