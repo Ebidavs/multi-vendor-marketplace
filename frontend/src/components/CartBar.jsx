@@ -1,11 +1,10 @@
-import { Link } from "react-router-dom";
-
 export default function CartBar({
   cartItems,
   onClearCart,
   onIncreaseQuantity,
   onDecreaseQuantity,
   onRemoveItem,
+  onCheckout,
 }) {
   const totalCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cartItems.reduce(
@@ -42,12 +41,9 @@ export default function CartBar({
             >
               Clear Cart
             </button>
-            <Link
-              to="/cart"
-              className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-95"
-            >
+            <button onClick={onCheckout} className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-95">
               Checkout →
-            </Link>
+            </button>
           </div>
         </div>
 

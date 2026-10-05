@@ -1,5 +1,7 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import xiMarketLogo from "../assets/xi-market-logo.png";
 
 export default function Navbar({ cartCount = 0, onCartClick }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -7,29 +9,37 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
   return (
     <header className="relative z-30 bg-emerald-600 text-white shadow-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 sm:py-4 lg:px-8">
+        {/* Logo */}
         <Link
           to="/"
-          className="text-xl font-bold tracking-tight text-white transition-colors hover:text-emerald-100 sm:text-2xl"
+          className="flex items-center gap-2 whitespace-nowrap text-xl font-bold tracking-tight text-white transition-colors hover:text-emerald-100 sm:text-2xl"
         >
-          Marketplace
+          <img
+            src={xiMarketLogo}
+            alt="Xi Market logo"
+            className="h-8 w-16 shrink-0 object-contain sm:h-9 sm:w-[72px]"
+          />
+          <span>Xi Market</span>
         </Link>
 
+        {/* Navigation Links & Cart Icon */}
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
           <nav className="hidden items-center gap-4 text-sm font-medium md:flex lg:gap-6">
-            <Link to="/" className="transition-colors hover:text-emerald-200">
+            <Link to="/" className="hover:text-emerald-200 transition-colors">
               Home
             </Link>
-            <Link to="/products" className="transition-colors hover:text-emerald-200">
+            <Link to="/products" className="hover:text-emerald-200 transition-colors">
               Products
             </Link>
-            <Link to="/login" className="transition-colors hover:text-emerald-200">
+            <Link to="/login" className="hover:text-emerald-200 transition-colors">
               Login
             </Link>
-            <Link to="/register" className="transition-colors hover:text-emerald-200">
+            <Link to="/register" className="hover:text-emerald-200 transition-colors">
               Register
             </Link>
           </nav>
 
+          {/* SVG Cart Button */}
           <Link
             to="/cart"
             onClick={onCartClick}
