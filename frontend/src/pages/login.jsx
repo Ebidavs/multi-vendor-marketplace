@@ -31,7 +31,7 @@ function Login() {
                 setToken(data.data.token);
             }
 
-            navigate("/");
+            navigate("/products");
         } catch (err) {
             setError(err.message || "Login failed");
         } finally {
