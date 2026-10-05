@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./register.css";
 import { registerUser } from "../services/api";
 
 function Register() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     role: "customer",
     name: "",
@@ -45,6 +47,7 @@ function Register() {
       const data = await registerUser(userData);
 
       setMessage(data.message || "Registration successful!");
+      navigate("/products");
 
       setFormData({
         role: "customer",
@@ -150,7 +153,7 @@ function Register() {
 
         <p className="login-text">
           Already have an account?{" "}
-          <a href="/login">Login</a>
+          <Link to="/login">Login</Link>
         </p>
       </div>
     </div>

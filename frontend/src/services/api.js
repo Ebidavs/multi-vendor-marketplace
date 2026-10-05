@@ -90,7 +90,26 @@ export const forgotPassword = async (email) => {
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || "Failed to send reset link");
+    throw new Error(data.message || "Failed to send reset code");
+  }
+  return data;
+};
+
+export const resetPassword = async ({ email, otp, newPassword }) => {
+  const response = await fetch(`${BASE_URL}/auth/reset-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, otp, newPassword }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    const errorMessage =
+      data.errors?.map((err) => err.errorMessage).join(".") ||
+      data.message ||
+      "Password reset failed";
+    throw new Error(errorMessage);
   }
   return data;
 };
