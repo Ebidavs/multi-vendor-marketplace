@@ -23,8 +23,6 @@ function Login() {
                 password,
             });
 
-            console.log("Login successful:", data);
-
             localStorage.setItem("user", JSON.stringify(data));
 
             // Persist the JWT under the key that services/api.js reads, so
@@ -33,9 +31,8 @@ function Login() {
                 setToken(data.data.token);
             }
 
-            navigate("/");
+            navigate("/products");
         } catch (err) {
-            console.error("Login error:", err);
             setError(err.message || "Login failed");
         } finally {
             setLoading(false);
