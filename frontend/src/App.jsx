@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, Route, Routes, useNavigate } from "react-router-dom";
+import {
+  Link,
+  Route,
+  Routes,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
+
+// Public / Customer Pages
 import Home from "./pages/Home";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import OrderTrackingPage from "./pages/OrderTrackingPage";
@@ -8,6 +16,7 @@ import Register from "./pages/register";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/ResetPassword";
 
+// Marketplace Components
 import Navbar from "./components/Navbar";
 import SearchBar from "./components/SearchBar";
 import CategoryBar from "./components/CategoryBar";
@@ -18,9 +27,38 @@ import CartPage from "./components/CartPage";
 import Checkout from "./components/Checkout";
 import ProductDetail from "./components/ProductDetail";
 import VendorDetail from "./components/VendorDetail";
+
+// Marketplace Hooks / Data
 import { useCart } from "./hooks/useCart";
 import { useProductFilters } from "./hooks/useProductFilters";
-import { categoriesList, dummyProducts, dummyVendors } from "./data/productsData";
+import {
+  categoriesList,
+  dummyProducts,
+  dummyVendors,
+} from "./data/productsData";
+
+// Vendor Pages
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorProducts from "./pages/vendor/VendorProducts";
+import AddProduct from "./pages/vendor/AddProduct";
+import EditProduct from "./pages/vendor/EditProduct";
+import VendorOrders from "./pages/vendor/VendorOrders";
+import VendorOrderDetails from "./pages/vendor/VendorOrderDetails";
+import VendorCustomers from "./pages/vendor/VendorCustomers";
+import VendorAnalytics from "./pages/vendor/VendorAnalytics";
+import VendorStoreProfile from "./pages/vendor/VendorStoreProfile";
+import VendorReviews from "./pages/vendor/VendorReviews";
+import VendorSettings from "./pages/vendor/VendorSettings";
+
+// Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminVendors from "./pages/admin/AdminVendors";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 const getPageSize = () => {
   if (window.innerWidth < 640) return 4;
@@ -30,6 +68,7 @@ const getPageSize = () => {
 
 export default function App() {
   const navigate = useNavigate();
+
   const [products] = useState(dummyProducts);
   const [cartViewed, setCartViewed] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,25 +112,54 @@ export default function App() {
     handleResetFilters,
   } = useProductFilters(products);
 
-  const pageCount = Math.ceil(filteredProducts.length / pageSize);
-  const pageStart = (currentPage - 1) * pageSize;
-  const paginatedProducts = filteredProducts.slice(pageStart, pageStart + pageSize);
-  const firstVisiblePage = Math.max(1, Math.min(currentPage - 2, pageCount - 4));
-  const visiblePages = Array.from(
-    { length: Math.min(pageCount, 5) },
-    (_, index) => firstVisiblePage + index
+  const pageCount = Math.ceil(
+    filteredProducts.length / pageSize
   );
 
+  const pageStart =
+    (currentPage - 1) * pageSize;
+
+  const paginatedProducts =
+    filteredProducts.slice(
+      pageStart,
+      pageStart + pageSize
+    );
+
+  const firstVisiblePage = Math.max(
+    1,
+    Math.min(
+      currentPage - 2,
+      pageCount - 4
+    )
+  );
+
+  const visiblePages = Array.from(
+    {
+      length: Math.min(pageCount, 5),
+    },
+    (_, index) =>
+      firstVisiblePage + index
+  );
 
   useEffect(() => {
-    const updatePageSize = () => setPageSize(getPageSize());
-    window.addEventListener("resize", updatePageSize);
-    return () => window.removeEventListener("resize", updatePageSize);
+    const updatePageSize = () =>
+      setPageSize(getPageSize());
+
+    window.addEventListener(
+      "resize",
+      updatePageSize
+    );
+
+    return () =>
+      window.removeEventListener(
+        "resize",
+        updatePageSize
+      );
   }, []);
 
   const marketplacePage = (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
-      {/* 1. Search Bar */}
+      {/* Search */}
       <div>
         <SearchBar
           searchQuery={searchQuery}
@@ -101,16 +169,20 @@ export default function App() {
         />
       </div>
 
-      {/* 2. Category Bar with top/bottom separation */}
+      {/* Categories */}
       <div className="py-2">
         <CategoryBar
           categories={categoriesList}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
+          selectedCategory={
+            selectedCategory
+          }
+          onSelectCategory={
+            setSelectedCategory
+          }
         />
       </div>
 
-      {/* 3. Main Grid & Filters */}
+      {/* Products / Filters */}
       <div className="flex flex-col gap-8 pt-2 xl:flex-row">
         <FilterSidebar
           priceFloor={priceFloor}
@@ -120,73 +192,130 @@ export default function App() {
           maxPrice={maxPrice}
           onMaxPriceChange={setMaxPrice}
           inStockOnly={inStockOnly}
-          onInStockChange={setInStockOnly}
-          onResetFilters={handleResetFilters}
+          onInStockChange={
+            setInStockOnly
+          }
+          onResetFilters={
+            handleResetFilters
+          }
         />
+
         <div className="flex-1">
           <ProductGrid
             products={paginatedProducts}
             cartItems={cartItems}
             onAddToCart={addToCart}
-            onIncreaseQuantity={increaseQuantity}
-            onDecreaseQuantity={handleDecreaseQuantity}
+            onIncreaseQuantity={
+              increaseQuantity
+            }
+            onDecreaseQuantity={
+              handleDecreaseQuantity
+            }
           />
+
           {pageCount > 1 && (
-            <nav aria-label="Product pages" className="mt-8 flex flex-wrap justify-center gap-1 sm:gap-2">
+            <nav
+              aria-label="Product pages"
+              className="mt-8 flex flex-wrap justify-center gap-1 sm:gap-2"
+            >
               {pageCount > 5 && (
                 <>
                   <button
                     type="button"
                     aria-label="First page"
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
+                    onClick={() =>
+                      setCurrentPage(1)
+                    }
+                    disabled={
+                      currentPage === 1
+                    }
                     className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     |&lt;
                   </button>
+
                   <button
                     type="button"
                     aria-label="Previous page"
-                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                    disabled={currentPage === 1}
+                    onClick={() =>
+                      setCurrentPage(
+                        (page) =>
+                          Math.max(
+                            1,
+                            page - 1
+                          )
+                      )
+                    }
+                    disabled={
+                      currentPage === 1
+                    }
                     className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     &lt;
                   </button>
                 </>
               )}
-              {visiblePages.map((page) => (
-                <button
-                  key={page}
-                  type="button"
-                  aria-label={`Page ${page}`}
-                  aria-current={currentPage === page ? "page" : undefined}
-                  onClick={() => setCurrentPage(page)}
-                  className={`h-11 min-w-11 rounded-md border px-3 text-sm font-semibold transition ${
-                    currentPage === page
-                      ? "border-emerald-700 bg-emerald-700 text-white"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-emerald-600 hover:text-emerald-700"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+
+              {visiblePages.map(
+                (page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    aria-label={`Page ${page}`}
+                    aria-current={
+                      currentPage === page
+                        ? "page"
+                        : undefined
+                    }
+                    onClick={() =>
+                      setCurrentPage(page)
+                    }
+                    className={`h-11 min-w-11 rounded-md border px-3 text-sm font-semibold transition ${
+                      currentPage === page
+                        ? "border-emerald-700 bg-emerald-700 text-white"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-emerald-600 hover:text-emerald-700"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+
               {pageCount > 5 && (
                 <>
                   <button
                     type="button"
                     aria-label="Next page"
-                    onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
-                    disabled={currentPage === pageCount}
+                    onClick={() =>
+                      setCurrentPage(
+                        (page) =>
+                          Math.min(
+                            pageCount,
+                            page + 1
+                          )
+                      )
+                    }
+                    disabled={
+                      currentPage ===
+                      pageCount
+                    }
                     className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     &gt;
                   </button>
+
                   <button
                     type="button"
                     aria-label="Last page"
-                    onClick={() => setCurrentPage(pageCount)}
-                    disabled={currentPage === pageCount}
+                    onClick={() =>
+                      setCurrentPage(
+                        pageCount
+                      )
+                    }
+                    disabled={
+                      currentPage ===
+                      pageCount
+                    }
                     className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     &gt;|
@@ -198,65 +327,140 @@ export default function App() {
         </div>
       </div>
 
-      {/* 4. Cart Sidebar / Drawer */}
       <CartBar
         cartItems={cartItems}
         onClearCart={handleClearCart}
-        onIncreaseQuantity={handleIncreaseQuantity}
-        onDecreaseQuantity={handleDecreaseQuantity}
-        onRemoveItem={handleRemoveItem}
-        onCheckout={() => navigate("/checkout")}
+        onIncreaseQuantity={
+          handleIncreaseQuantity
+        }
+        onDecreaseQuantity={
+          handleDecreaseQuantity
+        }
+        onRemoveItem={
+          handleRemoveItem
+        }
+        onCheckout={() =>
+          navigate("/checkout")
+        }
       />
     </main>
   );
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Persistent Navbar across all routes */}
+      {/* Current main navigation */}
       <Navbar
-        cartCount={cartViewed ? 0 : cartItems.reduce((sum, item) => sum + item.quantity, 0)}
-        onCartClick={() => setCartViewed(true)}
+        cartCount={
+          cartViewed
+            ? 0
+            : cartItems.reduce(
+                (sum, item) =>
+                  sum + item.quantity,
+                0
+              )
+        }
+        onCartClick={() =>
+          setCartViewed(true)
+        }
       />
 
-      {/* Routes setup */}
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/products" element={marketplacePage} />
-        <Route path="/login"element={<Login />} />
-        <Route path="/marketplace" element={marketplacePage} />
-        <Route path="/orders" element={<OrderHistoryPage />} />
-        <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
-        <Route path="/register"element={<Register />} />
-        <Route path="/forgot-password"element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        {/* =========================
+            PUBLIC / CUSTOMER
+        ========================= */}
+
+        <Route
+          path="/"
+          element={<Home />}
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
+
+        <Route
+          path="/products"
+          element={marketplacePage}
+        />
+
+        <Route
+          path="/marketplace"
+          element={marketplacePage}
+        />
+
+        <Route
+          path="/orders"
+          element={<OrderHistoryPage />}
+        />
+
+        <Route
+          path="/orders/:orderId"
+          element={<OrderTrackingPage />}
+        />
 
         <Route
           path="/cart"
           element={
             <CartPage
               cartItems={cartItems}
-              onClearCart={handleClearCart}
-              onIncreaseQuantity={increaseQuantity}
-              onDecreaseQuantity={handleDecreaseQuantity}
-              onRemoveItem={handleRemoveItem}
+              onClearCart={
+                handleClearCart
+              }
+              onIncreaseQuantity={
+                increaseQuantity
+              }
+              onDecreaseQuantity={
+                handleDecreaseQuantity
+              }
+              onRemoveItem={
+                handleRemoveItem
+              }
             />
           }
         />
+
         <Route
           path="/checkout"
-          element={<Checkout cartItems={cartItems} onClearCart={handleClearCart} />}
+          element={
+            <Checkout
+              cartItems={cartItems}
+              onClearCart={
+                handleClearCart
+              }
+            />
+          }
         />
+
         <Route
           path="/products/:id"
           element={
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
               <ProductDetail
                 products={products}
-                onAddToCart={addToCart}
+                onAddToCart={
+                  addToCart
+                }
               />
             </main>
           }
         />
+
         <Route
           path="/vendors/:id"
           element={
@@ -265,22 +469,178 @@ export default function App() {
                 vendors={dummyVendors}
                 products={products}
                 cartItems={cartItems}
-                onAddToCart={addToCart}
-                onIncreaseQuantity={increaseQuantity}
-                onDecreaseQuantity={handleDecreaseQuantity}
+                onAddToCart={
+                  addToCart
+                }
+                onIncreaseQuantity={
+                  increaseQuantity
+                }
+                onDecreaseQuantity={
+                  handleDecreaseQuantity
+                }
               />
             </main>
           }
         />
+
+        {/* =========================
+            VENDOR
+        ========================= */}
+
+        <Route
+          path="/vendor"
+          element={
+            <Navigate
+              to="/vendor/dashboard"
+              replace
+            />
+          }
+        />
+
+        <Route
+          path="/vendor/dashboard"
+          element={
+            <VendorDashboard />
+          }
+        />
+
+        <Route
+          path="/vendor/products"
+          element={
+            <VendorProducts />
+          }
+        />
+
+        <Route
+          path="/vendor/products/new"
+          element={<AddProduct />}
+        />
+
+        <Route
+          path="/vendor/products/:id/edit"
+          element={<EditProduct />}
+        />
+
+        <Route
+          path="/vendor/orders"
+          element={<VendorOrders />}
+        />
+
+        <Route
+          path="/vendor/orders/:orderId"
+          element={
+            <VendorOrderDetails />
+          }
+        />
+
+        <Route
+          path="/vendor/profile"
+          element={
+            <VendorStoreProfile />
+          }
+        />
+
+        <Route
+          path="/vendor/customers"
+          element={
+            <VendorCustomers />
+          }
+        />
+
+        <Route
+          path="/vendor/analytics"
+          element={
+            <VendorAnalytics />
+          }
+        />
+
+        <Route
+          path="/vendor/reviews"
+          element={<VendorReviews />}
+        />
+
+        <Route
+          path="/vendor/settings"
+          element={<VendorSettings />}
+        />
+
+        {/* =========================
+            ADMIN
+        ========================= */}
+
+        <Route
+          path="/admin"
+          element={
+            <Navigate
+              to="/admin/dashboard"
+              replace
+            />
+          }
+        />
+
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminDashboard />
+          }
+        />
+
+        <Route
+          path="/admin/vendors"
+          element={<AdminVendors />}
+        />
+
+        <Route
+          path="/admin/users"
+          element={<AdminUsers />}
+        />
+
+        <Route
+          path="/admin/products"
+          element={<AdminProducts />}
+        />
+
+        <Route
+          path="/admin/categories"
+          element={
+            <AdminCategories />
+          }
+        />
+
+        <Route
+          path="/admin/orders"
+          element={<AdminOrders />}
+        />
+
+        <Route
+          path="/admin/reports"
+          element={<AdminReports />}
+        />
+
+        <Route
+          path="/admin/settings"
+          element={<AdminSettings />}
+        />
+
+        {/* =========================
+            404
+        ========================= */}
+
         <Route
           path="*"
           element={
             <main className="mx-auto max-w-7xl px-4 py-16 text-center">
-              <h1 className="text-4xl font-extrabold text-gray-900">404</h1>
-              <p className="mt-2 text-gray-600">Page Not Found</p>
+              <h1 className="text-4xl font-extrabold text-gray-900">
+                404
+              </h1>
+
+              <p className="mt-2 text-gray-600">
+                Page Not Found
+              </p>
+
               <Link
                 to="/products"
-                className="mt-6 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 transition-colors"
+                className="mt-6 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-white transition-colors hover:bg-emerald-700"
               >
                 Back to Marketplace
               </Link>
@@ -288,5 +648,6 @@ export default function App() {
           }
         />
       </Routes>
-    </div>);
+    </div>
+  );
 }
