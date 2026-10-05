@@ -38,14 +38,15 @@ export const clearServerCart = () => request("/cart", { method: "DELETE" });
 export const addServerCartItem = (productId, quantity) =>
   request("/cart/items", { method: "POST", body: { productId, quantity } });
 
-// ===== Auth pages API (from main) =====
-const API_URL = "https://multi-vendor-marketplace-kt9n.onrender.com";
+// ===== Auth pages API =====
+// Uses the same BASE_URL as the rest of the app (VITE_API_BASE_URL), which
+// already includes the /api/v1 prefix - so no prefix is duplicated here.
 
 export const registerUser = async (userData) => {
-  const response = await fetch(`${API_URL}/api/v1/auth/register`, {
+  const response = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
     headers: {
-      "Content-Type": "application.json",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(userData),
   });
@@ -63,7 +64,7 @@ export const registerUser = async (userData) => {
 };
 
 export const loginUser = async (userData) => {
-  const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+  const response = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -80,7 +81,7 @@ export const loginUser = async (userData) => {
 };
 
 export const forgotPassword = async (email) => {
-  const response = await fetch(`${API_URL}/api/v1/auth/forgot-password`, {
+  const response = await fetch(`${BASE_URL}/auth/forgot-password`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
