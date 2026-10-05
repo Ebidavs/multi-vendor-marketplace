@@ -7,6 +7,7 @@ import CartBar from "./components/CartBar";
 
 // Pages
 import Home from "./pages/Home";
+import Cart from "./pages/Cart";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import ForgotPassword from "./pages/forgot-password";
@@ -49,6 +50,8 @@ export default function App() {
     setMinPrice,
     maxPrice,
     setMaxPrice,
+    priceFloor,
+    priceCeiling,
     inStockOnly,
     setInStockOnly,
     sortBy,
@@ -65,6 +68,18 @@ export default function App() {
       {/* All app routes */}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route
+          path="/cart"
+          element={
+            <Cart
+              cartItems={cartItems}
+              onIncreaseQuantity={handleIncreaseQuantity}
+              onDecreaseQuantity={handleDecreaseQuantity}
+              onRemoveItem={handleRemoveItem}
+              onClearCart={handleClearCart}
+            />
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -89,6 +104,8 @@ export default function App() {
 
               <div className="flex flex-col gap-8 md:flex-row">
                 <FilterSidebar
+                  priceFloor={priceFloor}
+                  priceCeiling={priceCeiling}
                   minPrice={minPrice}
                   onMinPriceChange={setMinPrice}
                   maxPrice={maxPrice}
@@ -101,7 +118,10 @@ export default function App() {
                 <div className="flex-1">
                   <ProductGrid
                     products={filteredProducts}
+                    cartItems={cartItems}
                     onAddToCart={handleAddToCart}
+                    onIncreaseQuantity={handleIncreaseQuantity}
+                    onDecreaseQuantity={handleDecreaseQuantity}
                   />
                 </div>
               </div>
@@ -147,13 +167,15 @@ export default function App() {
         />
       </Routes>
 
-      <CartBar
-        cartItems={cartItems}
-        onClearCart={handleClearCart}
-        onIncreaseQuantity={handleIncreaseQuantity}
-        onDecreaseQuantity={handleDecreaseQuantity}
-        onRemoveItem={handleRemoveItem}
-      />
+      {location.pathname !== "/cart" && (
+        <CartBar
+          cartItems={cartItems}
+          onClearCart={handleClearCart}
+          onIncreaseQuantity={handleIncreaseQuantity}
+          onDecreaseQuantity={handleDecreaseQuantity}
+          onRemoveItem={handleRemoveItem}
+        />
+      )}
     </div>
   );
 }

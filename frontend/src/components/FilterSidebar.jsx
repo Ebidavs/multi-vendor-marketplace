@@ -154,6 +154,28 @@ export default function FilterSidebar({
                 background: `linear-gradient(to right, #e5e7eb ${minProgress}%, #059669 ${minProgress}%, #059669 ${maxProgress}%, #e5e7eb ${maxProgress}%)`,
               }}
             />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 cursor-pointer"
+              onPointerDown={(event) => {
+                const bounds = event.currentTarget.getBoundingClientRect();
+                const progress = Math.max(
+                  0,
+                  Math.min(1, (event.clientX - bounds.left) / bounds.width)
+                );
+                const selectedValue = Math.round(
+                  priceFloor + progress * priceSpan
+                );
+                const distanceToMin = Math.abs(selectedValue - minPrice);
+                const distanceToMax = Math.abs(selectedValue - maxPrice);
+
+                if (distanceToMin <= distanceToMax) {
+                  onMinPriceChange(Math.min(selectedValue, maxPrice - 1));
+                } else {
+                  onMaxPriceChange(Math.max(selectedValue, minPrice + 1));
+                }
+              }}
+            />
             <input
               type="range"
               aria-label="Minimum price slider"

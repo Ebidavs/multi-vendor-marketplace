@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function CartBar({
   cartItems,
   onClearCart,
@@ -40,9 +42,12 @@ export default function CartBar({
             >
               Clear Cart
             </button>
-            <button className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-95">
+            <Link
+              to="/cart"
+              className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-95"
+            >
               Checkout →
-            </button>
+            </Link>
           </div>
         </div>
 
