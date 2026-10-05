@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./login.css";
-import { loginUser } from "../services/api";
+import { loginUser, setToken } from "../services/api";
 
 function Login() {
     const [email, setEmail] = useState("");
@@ -23,13 +23,16 @@ function Login() {
                 password,
             });
 
-            console.log("Login successful:", data);
-
             localStorage.setItem("user", JSON.stringify(data));
 
-            navigate("/");
+            // Persist the JWT under the key that services/api.js reads, so
+            // authenticated requests (cart, orders, checkout) send it.
+            if (data?.data?.token) {
+                setToken(data.data.token);
+            }
+
+            navigate("/products");
         } catch (err) {
-            console.error("Login error:", err);
             setError(err.message || "Login failed");
         } finally {
             setLoading(false);

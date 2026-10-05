@@ -131,16 +131,13 @@ export const authenticatedRequest = async (
 // AUTHENTICATION
 // ==========================================
 
-export const registerUser = async (
-  userData
-) => {
+export const registerUser = async (userData) => {
   const response = await fetch(
-    `${API_URL}/api/v1/auth/register`,
+    `${BASE_URL}/auth/register`,
     {
       method: "POST",
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(userData),
     }
@@ -169,16 +166,13 @@ export const registerUser = async (
 };
 
 
-export const loginUser = async (
-  userData
-) => {
+export const loginUser = async (userData) => {
   const response = await fetch(
-    `${API_URL}/api/v1/auth/login`,
+    `${BASE_URL}/auth/login`,
     {
       method: "POST",
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(userData),
     }
@@ -203,24 +197,67 @@ export const login = (
   });
 
 
-export const forgotPassword = async (
-  email
-) => {
+export const forgotPassword = async (email) => {
   const response = await fetch(
-    `${API_URL}/api/v1/auth/forgot-password`,
+    `${BASE_URL}/auth/forgot-password`,
     {
       method: "POST",
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to send reset code"
+    );
+  }
+
+  return data;
+};
+
+
+export const resetPassword = async ({
+  email,
+  otp,
+  newPassword,
+}) => {
+  const response = await fetch(
+    `${BASE_URL}/auth/reset-password`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         email,
+        otp,
+        newPassword,
       }),
     }
   );
 
-  return handleResponse(response);
+  const data = await response.json();
+
+  if (!response.ok) {
+    const errorMessage =
+      data.errors
+        ?.map(
+          (err) => err.errorMessage
+        )
+        .join(".") ||
+      data.message ||
+      "Password reset failed";
+
+    throw new Error(errorMessage);
+  }
+
+  return data;
 };
 
 
@@ -240,7 +277,7 @@ export const getProductById = async (
   productId
 ) => {
   const response = await fetch(
-    `${API_URL}/api/v1/products/${productId}`
+    `${BASE_URL}/products/${productId}`
   );
 
   return handleResponse(response);
@@ -289,7 +326,7 @@ export const addServerCartItem = (
 
 export const getCategories = async () => {
   const response = await fetch(
-    `${API_URL}/api/v1/categories`
+    `${BASE_URL}/categories`
   );
 
   return handleResponse(response);
@@ -343,7 +380,7 @@ export const getVendorProducts = async (
   vendorId
 ) => {
   const response = await fetch(
-    `${API_URL}/api/v1/products?vendor=${vendorId}&limit=50`
+    `${BASE_URL}/products?vendor=${vendorId}&limit=50`
   );
 
   return handleResponse(response);

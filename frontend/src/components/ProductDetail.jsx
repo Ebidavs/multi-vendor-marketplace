@@ -9,7 +9,9 @@ export default function ProductDetail({ products = [], onAddToCart }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
 
-  if (!id || Number.isNaN(Number(id))) {
+  // IDs may be numeric (local catalogue) or Mongo ObjectIds (live API),
+  // so only guard against a missing param here.
+  if (!id) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 text-center">
         <h2 className="text-xl font-bold text-gray-800">Invalid Product ID</h2>

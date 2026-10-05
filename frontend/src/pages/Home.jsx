@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import shoppingImage from "../assets/web-shopping.svg";
 import "./Home.css";
 
@@ -142,9 +143,9 @@ function Home() {
               <span className="section-kicker">Featured</span>
               <h2>Best sellers</h2>
             </div>
-            <a href="#" className="section-link">
+            <Link to="/products" className="section-link">
               View all
-            </a>
+            </Link>
           </div>
 
           <div className="product-grid">
