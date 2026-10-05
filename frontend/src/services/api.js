@@ -34,62 +34,30 @@ export const login = (email, password) =>
 export const getProducts = (query = "") => request(`/products${query}`, { auth: false });
 export const createOrder = (payload) => request("/orders", { method: "POST", body: payload });
 
+export const getCart = () => request("/cart");
 export const clearServerCart = () => request("/cart", { method: "DELETE" });
 export const addServerCartItem = (productId, quantity) =>
   request("/cart/items", { method: "POST", body: { productId, quantity } });
 
-// ===== Auth pages API (from main) =====
-const API_URL = "https://multi-vendor-marketplace-kt9n.onrender.com";
-
 export const registerUser = async (userData) => {
-  const response = await fetch(`${API_URL}/api/v1/auth/register`, {
+  return request("/auth/register", {
     method: "POST",
-    headers: {
-      "Content-Type": "application.json",
-    },
-    body: JSON.stringify(userData),
+    body: userData,
+    auth: false,
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    const errorMessage =
-      data.errors?.map((err) => err.errorMessage).join(".") ||
-      data.message ||
-      "Registration failed";
-    throw new Error(errorMessage);
-  }
-  return data;
 };
 
 export const loginUser = async (userData) => {
-  const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+  return request("/auth/login", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(userData),
+    body: userData,
+    auth: false,
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Login failed");
-  }
-  return data;
 };
 
-export const forgotPassword = async (email) => {
-  const response = await fetch(`${API_URL}/api/v1/auth/forgot-password`, {
+export const forgotPassword = (email) =>
+  request("/auth/forgot-password", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
+    body: { email },
+    auth: false,
   });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to send reset link");
-  }
-  return data;
-};

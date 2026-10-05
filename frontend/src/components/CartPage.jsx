@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 const formatPrice = (price) => `₦${price.toLocaleString()}`;
@@ -9,8 +9,8 @@ export default function CartPage({
   onDecreaseQuantity,
   onRemoveItem,
   onClearCart,
+  onProceedToCheckout,
 }) {
-  const navigate = useNavigate();
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -100,7 +100,7 @@ export default function CartPage({
               </div>
               <button
                 type="button"
-                onClick={() => navigate("/checkout")}
+                onClick={onProceedToCheckout}
                 className="mt-5 w-full rounded-md bg-emerald-700 px-4 py-3 font-semibold text-white transition hover:bg-emerald-800"
               >
                 Proceed to Checkout

@@ -9,7 +9,7 @@ export default function ProductDetail({ products = [], onAddToCart }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
 
-  if (!id || Number.isNaN(Number(id))) {
+  if (!id) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 text-center">
         <h2 className="text-xl font-bold text-gray-800">Invalid Product ID</h2>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Route, Routes, useNavigate } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Home from "./pages/Home";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import OrderTrackingPage from "./pages/OrderTrackingPage";
@@ -21,6 +21,18 @@ import VendorDetail from "./components/VendorDetail";
 import { useCart } from "./hooks/useCart";
 import { useProductFilters } from "./hooks/useProductFilters";
 import { categoriesList, dummyProducts, dummyVendors } from "./data/productsData";
+import { getProducts, getToken } from "./services/api";
+import { toProduct } from "./services/mappers";
+
+const USE_API = import.meta.env.VITE_USE_API === "true";
+const hasCustomerSession = () => {
+  if (!getToken()) return false;
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null")?.role === "customer";
+  } catch {
+    return false;
+  }
+};
 
 const getPageSize = () => {
   if (window.innerWidth < 640) return 4;
@@ -30,8 +42,12 @@ const getPageSize = () => {
 
 export default function App() {
   const navigate = useNavigate();
-  const [products] = useState(dummyProducts);
+  const location = useLocation();
+  const [products, setProducts] = useState(USE_API ? [] : dummyProducts);
+  const [productsLoading, setProductsLoading] = useState(USE_API);
+  const [productsError, setProductsError] = useState("");
   const [cartViewed, setCartViewed] = useState(false);
+  const [isCustomerAuthenticated, setIsCustomerAuthenticated] = useState(hasCustomerSession);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(getPageSize);
 
@@ -44,6 +60,33 @@ export default function App() {
     handleClearCart,
   } = useCart();
 
+  useEffect(() => {
+    setIsCustomerAuthenticated(hasCustomerSession());
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!USE_API) return undefined;
+
+    let isCurrent = true;
+    getProducts("?page=1&limit=50")
+      .then((result) => {
+        if (!Array.isArray(result.products)) {
+          throw new Error("The products API returned an unexpected response.");
+        }
+        if (isCurrent) setProducts(result.products.map(toProduct));
+      })
+      .catch((error) => {
+        if (isCurrent) setProductsError(error.message);
+      })
+      .finally(() => {
+        if (isCurrent) setProductsLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
   const addToCart = (...args) => {
     setCartViewed(false);
     handleAddToCart(...args);
@@ -52,6 +95,14 @@ export default function App() {
   const increaseQuantity = (...args) => {
     setCartViewed(false);
     handleIncreaseQuantity(...args);
+  };
+
+  const proceedToCheckout = () => {
+    if (isCustomerAuthenticated) {
+      navigate("/checkout");
+      return;
+    }
+    navigate("/login", { state: { from: "/checkout" } });
   };
 
   const {
@@ -124,13 +175,23 @@ export default function App() {
           onResetFilters={handleResetFilters}
         />
         <div className="flex-1">
-          <ProductGrid
-            products={paginatedProducts}
-            cartItems={cartItems}
-            onAddToCart={addToCart}
-            onIncreaseQuantity={increaseQuantity}
-            onDecreaseQuantity={handleDecreaseQuantity}
-          />
+          {productsLoading ? (
+            <p className="rounded-xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">
+              Loading products…
+            </p>
+          ) : productsError ? (
+            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+              Could not load products: {productsError}
+            </p>
+          ) : (
+            <ProductGrid
+              products={paginatedProducts}
+              cartItems={cartItems}
+              onAddToCart={addToCart}
+              onIncreaseQuantity={increaseQuantity}
+              onDecreaseQuantity={handleDecreaseQuantity}
+            />
+          )}
           {pageCount > 1 && (
             <nav aria-label="Product pages" className="mt-8 flex flex-wrap justify-center gap-1 sm:gap-2">
               {pageCount > 5 && (
@@ -205,7 +266,7 @@ export default function App() {
         onIncreaseQuantity={handleIncreaseQuantity}
         onDecreaseQuantity={handleDecreaseQuantity}
         onRemoveItem={handleRemoveItem}
-        onCheckout={() => navigate("/checkout")}
+        onCheckout={() => navigate("/cart")}
       />
     </main>
   );
@@ -239,12 +300,19 @@ export default function App() {
               onIncreaseQuantity={increaseQuantity}
               onDecreaseQuantity={handleDecreaseQuantity}
               onRemoveItem={handleRemoveItem}
+              onProceedToCheckout={proceedToCheckout}
             />
           }
         />
         <Route
           path="/checkout"
-          element={<Checkout cartItems={cartItems} onClearCart={handleClearCart} />}
+          element={
+            isCustomerAuthenticated ? (
+              <Checkout cartItems={cartItems} onClearCart={handleClearCart} />
+            ) : (
+              <Navigate to="/login" replace state={{ from: "/checkout" }} />
+            )
+          }
         />
         <Route
           path="/products/:id"
