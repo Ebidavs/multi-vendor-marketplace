@@ -33,9 +33,10 @@ import { useCart } from "./hooks/useCart";
 import { useProductFilters } from "./hooks/useProductFilters";
 import {
   categoriesList,
-  dummyProducts,
   dummyVendors,
 } from "./data/productsData";
+import { getProducts } from "./services/api";
+import { toProduct } from "./services/mappers";
 
 // Vendor Pages
 import VendorDashboard from "./pages/vendor/VendorDashboard";
@@ -69,7 +70,10 @@ const getPageSize = () => {
 export default function App() {
   const navigate = useNavigate();
 
-  const [products] = useState(dummyProducts);
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState("");
+  const [productsRetry, setProductsRetry] = useState(0);
   const [cartViewed, setCartViewed] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(getPageSize);
@@ -142,6 +146,51 @@ export default function App() {
   );
 
   useEffect(() => {
+    let isCurrent = true;
+
+    const loadProducts = async () => {
+      setProductsLoading(true);
+      setProductsError("");
+
+      try {
+        const firstPage = await getProducts("?page=1&limit=50");
+        if (!Array.isArray(firstPage?.products)) {
+          throw new Error("The product service returned an invalid response.");
+        }
+
+        const totalPages = Number(firstPage.pagination?.pages) || 1;
+        const fetchedProducts = [...firstPage.products];
+
+        for (let page = 2; page <= totalPages; page += 1) {
+          const pageResult = await getProducts(`?page=${page}&limit=50`);
+          if (!Array.isArray(pageResult?.products)) {
+            throw new Error("The product service returned an invalid response.");
+          }
+          fetchedProducts.push(...pageResult.products);
+        }
+
+        if (isCurrent) {
+          setProducts(fetchedProducts.map(toProduct));
+        }
+      } catch (error) {
+        if (isCurrent) {
+          setProductsError(error.message || "Unable to load products.");
+        }
+      } finally {
+        if (isCurrent) {
+          setProductsLoading(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [productsRetry]);
+
+  useEffect(() => {
     const updatePageSize = () =>
       setPageSize(getPageSize());
 
@@ -201,19 +250,36 @@ export default function App() {
         />
 
         <div className="flex-1">
-          <ProductGrid
-            products={paginatedProducts}
-            cartItems={cartItems}
-            onAddToCart={addToCart}
-            onIncreaseQuantity={
-              increaseQuantity
-            }
-            onDecreaseQuantity={
-              handleDecreaseQuantity
-            }
-          />
+          {productsLoading ? (
+            <p className="py-8 text-center text-sm text-gray-500" role="status">
+              Loading products...
+            </p>
+          ) : productsError ? (
+            <div className="py-8 text-center" role="alert">
+              <p className="text-sm text-gray-600">{productsError}</p>
+              <button
+                type="button"
+                onClick={() => setProductsRetry((retry) => retry + 1)}
+                className="mt-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <ProductGrid
+              products={paginatedProducts}
+              cartItems={cartItems}
+              onAddToCart={addToCart}
+              onIncreaseQuantity={
+                increaseQuantity
+              }
+              onDecreaseQuantity={
+                handleDecreaseQuantity
+              }
+            />
+          )}
 
-          {pageCount > 1 && (
+          {!productsLoading && !productsError && pageCount > 1 && (
             <nav
               aria-label="Product pages"
               className="mt-8 flex flex-wrap justify-center gap-1 sm:gap-2"
