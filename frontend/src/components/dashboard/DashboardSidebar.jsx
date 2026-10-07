@@ -125,7 +125,7 @@ function DashboardSidebar({ role = "vendor", isOpen, onClose }) {
             <ShoppingBag size={22} />
           </div>
 
-          <span>MarketHub</span>
+          <span>XI Market</span>
 
           <button
             className="sidebar-close"
