@@ -221,6 +221,51 @@ export const forgotPassword = async (email) => {
   return data;
 };
 
+const accountReactivationRequest = async (action, payload) => {
+  let response;
+  try {
+    response = await fetch(
+      `${BASE_URL}/auth/reactivate/${action}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+  } catch {
+    throw new Error("Unable to connect. Check your internet connection and try again.");
+  }
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok || !data?.success) {
+    const validationErrors = data?.errors
+      ?.map((item) => item.errorMessage || item.message)
+      .filter(Boolean)
+      .join(". ");
+    const error = new Error(
+      validationErrors ||
+        (response.status < 500 && data?.message) ||
+        "We couldn't complete your request. Please try again."
+    );
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+};
+
+export const requestAccountReactivation = (email) =>
+  accountReactivationRequest("request", { email });
+
+export const verifyAccountReactivationOtp = ({ email, otp }) =>
+  accountReactivationRequest("verify", { email, otp });
+
+export const confirmAccountReactivation = ({ email, otp }) =>
+  accountReactivationRequest("confirm", { email, otp });
+
 
 export const resetPassword = async ({
   email,

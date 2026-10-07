@@ -1,0 +1,176 @@
+.reactivation-page {
+  display: grid;
+  min-height: calc(100vh - 64px);
+  place-items: center;
+  box-sizing: border-box;
+  padding: 40px 20px;
+  background:
+    radial-gradient(ellipse at 10% 8%, rgba(176, 224, 194, 0.42), transparent 34%),
+    radial-gradient(ellipse at 95% 92%, rgba(216, 239, 222, 0.72), transparent 38%),
+    #f5f8f4;
+  color: #183b2a;
+  font-family: Inter, "Segoe UI", sans-serif;
+}
+
+.reactivation-card {
+  width: min(100%, 460px);
+  box-sizing: border-box;
+  padding: clamp(28px, 6vw, 48px);
+  border: 1px solid rgba(28, 87, 54, 0.08);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(27, 64, 42, 0.12);
+}
+
+.reactivation-mark {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 24px;
+  place-items: center;
+  border-radius: 15px;
+  background: #e8f5ec;
+  color: #21834e;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.reactivation-kicker {
+  margin: 0 0 10px;
+  color: #21834e;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.15em;
+}
+
+.reactivation-card h1 {
+  margin: 0;
+  color: #173b28;
+  font-size: clamp(27px, 5vw, 34px);
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+
+.reactivation-intro {
+  margin: 14px 0 28px;
+  color: #708078;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.reactivation-field {
+  margin-bottom: 20px;
+}
+
+.reactivation-field label {
+  display: block;
+  margin-bottom: 8px;
+  color: #253a2e;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.reactivation-field input {
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: 1px solid #dce5de;
+  border-radius: 10px;
+  outline: none;
+  background: #fcfdfc;
+  color: #183b2a;
+  font: inherit;
+  font-size: 14px;
+}
+
+.reactivation-field input:focus {
+  border-color: #21834e;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(33, 131, 78, 0.12);
+}
+
+.reactivation-field input:disabled {
+  color: #708078;
+  opacity: 0.8;
+}
+
+.reactivation-hint {
+  display: block;
+  margin-top: 7px;
+  color: #708078;
+  font-size: 12px;
+}
+
+.reactivation-message {
+  margin: 0 0 16px;
+  border-radius: 9px;
+  padding: 11px 13px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.reactivation-success {
+  background: #edf8f0;
+  color: #17663a;
+}
+
+.reactivation-error {
+  background: #fff1f0;
+  color: #a12d28;
+}
+
+.reactivation-button {
+  width: 100%;
+  min-height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: #21834e;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.reactivation-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #17663a;
+}
+
+.reactivation-button:disabled,
+.reactivation-resend:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.reactivation-resend {
+  display: block;
+  margin: 14px auto 0;
+  border: 0;
+  background: transparent;
+  color: #1c7d49;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.reactivation-login {
+  margin: 24px 0 0;
+  color: #708078;
+  font-size: 13px;
+  text-align: center;
+}
+
+.reactivation-login a {
+  color: #1c7d49;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.reactivation-login a:hover {
+  text-decoration: underline;
+}

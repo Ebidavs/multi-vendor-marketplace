@@ -15,6 +15,7 @@ import Login from "./pages/login";
 import Register from "./pages/register";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/ResetPassword";
+import AccountReactivation from "./pages/AccountReactivation";
 
 // Marketplace Components
 import Navbar from "./components/Navbar";
@@ -451,6 +452,11 @@ export default function App() {
         />
 
         <Route
+          path="/vendor/register"
+          element={<Register role="vendor" />}
+        />
+
+        <Route
           path="/forgot-password"
           element={<ForgotPassword />}
         />
@@ -458,6 +464,11 @@ export default function App() {
         <Route
           path="/reset-password"
           element={<ResetPassword />}
+        />
+
+        <Route
+          path="/reactivate-account"
+          element={<AccountReactivation />}
         />
 
         <Route

@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./login.css";
 import { loginUser, setToken } from "../services/api";
+import shoppingIllustration from "../assets/web-shopping.svg";
+import xiMarketLogo from "../assets/xi-market-logo.png";
 
 function Login() {
     const [email, setEmail] = useState("");
@@ -10,6 +12,7 @@ function Login() {
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,74 +44,106 @@ function Login() {
 
     return (
         <div className="login-page">
-            <div className="login-card">
-
-                <div className="login-brand">
-                    <h1>Xi Market</h1>
-                </div>
-
-                <h2>Welcome Back</h2>
-
-                <p className="login-subtitle">
-                    Sign in to your Xi Market account
-                </p>
-
-                <form onSubmit={handleSubmit}>
-
-                    <div className="login-field">
-                        <label htmlFor="email">Email Address</label>
-
-                        <input
-                            type="email"
-                            id="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="login-field">
-                        <label htmlFor="password">Password</label>
-
-                        <input
-                            type="password"
-                            id="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="forgot-link">
-                        <Link to="/forgot-password">
-                            Forgot Password?
-                        </Link>
-                    </div>
-
-                    {error && (
-                        <p className="login-error">
-                            {error}
+            <main className="login-layout">
+                <section className="login-showcase" aria-label="Xi Market">
+                    <div className="showcase-orb showcase-orb-top" aria-hidden="true" />
+                    <div className="showcase-orb showcase-orb-bottom" aria-hidden="true" />
+                    <div className="showcase-content">
+                        <p className="showcase-eyebrow">YOUR EVERYDAY MARKETPLACE</p>
+                        <h1>Good finds.<br />Great living.</h1>
+                        <p className="showcase-copy">
+                            Everything you need, all in one market.
                         </p>
-                    )}
+                        <div className="showcase-art">
+                            <img src={shoppingIllustration} alt="" />
+                        </div>
+                        <p className="showcase-footnote">
+                            Discover more from the sellers you love.
+                        </p>
+                    </div>
+                </section>
 
-                    <button
-                        type="submit"
-                        className="login-button"
-                        disabled={loading}
-                    >
-                        {loading ? "Logging in..." : "Login"}
-                    </button>
+                <section className="login-form-panel" aria-labelledby="login-heading">
+                    <div className="login-card">
+                        <div className="login-brand">
+                            <span className="login-brand-crop">
+                                <img src={xiMarketLogo} alt="Xi Market" />
+                            </span>
+                        </div>
 
-                </form>
+                        <div className="login-intro">
+                            <p className="login-kicker">WELCOME TO XI MARKET</p>
+                            <h2 id="login-heading">Welcome Back <span aria-hidden="true">👋</span></h2>
+                            <p className="login-subtitle">
+                                Sign in to continue shopping.
+                            </p>
+                        </div>
 
-                <p className="register-text">
-                    Don't have an account?{" "}
-                    <Link to="/register">Register</Link>
-                </p>
+                        {location.state?.message && (
+                            <p className="login-success" role="status">
+                                {location.state.message}
+                            </p>
+                        )}
 
-            </div>
+                        <form onSubmit={handleSubmit}>
+                            <div className="login-field">
+                                <label htmlFor="email">Email Address</label>
+
+                                <input
+                                    type="email"
+                                    id="email"
+                                    placeholder="Enter your email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="login-field">
+                                <label htmlFor="password">Password</label>
+
+                                <input
+                                    type="password"
+                                    id="password"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="forgot-link">
+                                <Link to="/forgot-password">
+                                    Forgot Password?
+                                </Link>
+                            </div>
+
+                            {error && (
+                                <p className="login-error">
+                                    {error}
+                                </p>
+                            )}
+
+                            <button
+                                type="submit"
+                                className="login-button"
+                                disabled={loading}
+                            >
+                                {loading ? "Logging in..." : "Login"}
+                            </button>
+                        </form>
+
+                        <p className="register-text">
+                            Don't have an account?{" "}
+                            <Link to="/register">Register</Link>
+                        </p>
+                        <p className="reactivation-link">
+                            Account deactivated?{" "}
+                            <Link to="/reactivate-account">Reactivate it</Link>
+                        </p>
+                    </div>
+                </section>
+            </main>
         </div>
     );
 }
