@@ -88,6 +88,9 @@ function Home() {
               <Link to="/vendor/register" className="secondary-btn vendor-btn">
                 Become a Vendor
               </Link>
+              <Link to="/admin/dashboard" className="secondary-btn vendor-btn">
+                Admin Dashboard
+              </Link>
             </div>
 
             <div className="hero-stats" aria-label="Marketplace statistics">
