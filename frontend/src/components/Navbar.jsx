@@ -19,7 +19,7 @@ export default function Navbar({ cartCount = 0, onCartClick }) {
             alt="Xi Market logo"
             className="h-8 w-16 shrink-0 object-contain sm:h-9 sm:w-[72px]"
           />
-          <span>Xi Market</span>
+          
         </Link>
 
         {/* Navigation Links & Cart Icon */}
