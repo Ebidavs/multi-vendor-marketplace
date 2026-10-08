@@ -1,6 +1,3 @@
-// ==========================================
-// API CONFIGURATION
-// ==========================================
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
@@ -11,7 +8,6 @@ const BASE_URL =
   `${API_URL}/api/v1`;
 
 const TOKEN_KEY = "token";
-
 
 // ==========================================
 // TOKEN HELPERS
@@ -27,7 +23,6 @@ export const setToken = (token) =>
 
 export const clearToken = () =>
   localStorage.removeItem(TOKEN_KEY);
-
 
 // ==========================================
 // RESPONSE HANDLER
@@ -45,10 +40,8 @@ const handleResponse = async (response) => {
   return data;
 };
 
-
 // ==========================================
 // GENERIC API REQUEST
-// Used by checkout/cart/customer features
 // ==========================================
 
 async function request(
@@ -70,9 +63,10 @@ async function request(
     {
       method,
       headers,
-      body: body
-        ? JSON.stringify(body)
-        : undefined,
+      body:
+        body !== undefined
+          ? JSON.stringify(body)
+          : undefined,
     }
   );
 
@@ -94,11 +88,8 @@ async function request(
   return json.data;
 }
 
-
 // ==========================================
 // AUTHENTICATED REQUEST
-// Used by Vendor/Admin dashboard
-// Supports JSON and FormData
 // ==========================================
 
 export const authenticatedRequest = async (
@@ -126,12 +117,13 @@ export const authenticatedRequest = async (
   return handleResponse(response);
 };
 
-
 // ==========================================
 // AUTHENTICATION
 // ==========================================
 
-export const registerUser = async (userData) => {
+export const registerUser = async (
+  userData
+) => {
   const response = await fetch(
     `${BASE_URL}/auth/register`,
     {
@@ -152,8 +144,7 @@ export const registerUser = async (userData) => {
       data?.errors
         ?.map(
           (err) =>
-            err.errorMessage ||
-            err.message
+            err.errorMessage || err.message
         )
         .join(". ") ||
       data?.message ||
@@ -165,8 +156,9 @@ export const registerUser = async (userData) => {
   return data;
 };
 
-
-export const loginUser = async (userData) => {
+export const loginUser = async (
+  userData
+) => {
   const response = await fetch(
     `${BASE_URL}/auth/login`,
     {
@@ -181,8 +173,7 @@ export const loginUser = async (userData) => {
   return handleResponse(response);
 };
 
-
-// Compatibility with checkout code
+// Compatibility with existing checkout code
 export const login = (
   email,
   password
@@ -196,8 +187,13 @@ export const login = (
     auth: false,
   });
 
+// ==========================================
+// PASSWORD RECOVERY
+// ==========================================
 
-export const forgotPassword = async (email) => {
+export const forgotPassword = async (
+  email
+) => {
   const response = await fetch(
     `${BASE_URL}/auth/forgot-password`,
     {
@@ -209,63 +205,19 @@ export const forgotPassword = async (email) => {
     }
   );
 
-  const data = await response.json();
+  const data = await response
+    .json()
+    .catch(() => null);
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
+      data?.message ||
         "Failed to send reset code"
     );
   }
 
   return data;
 };
-
-const accountReactivationRequest = async (action, payload) => {
-  let response;
-  try {
-    response = await fetch(
-      `${BASE_URL}/auth/reactivate/${action}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-  } catch {
-    throw new Error("Unable to connect. Check your internet connection and try again.");
-  }
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok || !data?.success) {
-    const validationErrors = data?.errors
-      ?.map((item) => item.errorMessage || item.message)
-      .filter(Boolean)
-      .join(". ");
-    const error = new Error(
-      validationErrors ||
-        (response.status < 500 && data?.message) ||
-        "We couldn't complete your request. Please try again."
-    );
-    error.status = response.status;
-    throw error;
-  }
-
-  return data;
-};
-
-export const requestAccountReactivation = (email) =>
-  accountReactivationRequest("request", { email });
-
-export const verifyAccountReactivationOtp = ({ email, otp }) =>
-  accountReactivationRequest("verify", { email, otp });
-
-export const confirmAccountReactivation = ({ email, otp }) =>
-  accountReactivationRequest("confirm", { email, otp });
-
 
 export const resetPassword = async ({
   email,
@@ -287,16 +239,19 @@ export const resetPassword = async ({
     }
   );
 
-  const data = await response.json();
+  const data = await response
+    .json()
+    .catch(() => null);
 
   if (!response.ok) {
     const errorMessage =
-      data.errors
+      data?.errors
         ?.map(
-          (err) => err.errorMessage
+          (err) =>
+            err.errorMessage || err.message
         )
-        .join(".") ||
-      data.message ||
+        .join(". ") ||
+      data?.message ||
       "Password reset failed";
 
     throw new Error(errorMessage);
@@ -305,9 +260,89 @@ export const resetPassword = async ({
   return data;
 };
 
+// ==========================================
+// ACCOUNT REACTIVATION
+// ==========================================
+
+const accountReactivationRequest = async (
+  action,
+  payload
+) => {
+  let response;
+
+  try {
+    response = await fetch(
+      `${BASE_URL}/auth/reactivate/${action}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+  } catch {
+    throw new Error(
+      "Unable to connect. Check your internet connection and try again."
+    );
+  }
+
+  const data = await response
+    .json()
+    .catch(() => null);
+
+  if (!response.ok || !data?.success) {
+    const validationErrors = data?.errors
+      ?.map(
+        (item) =>
+          item.errorMessage || item.message
+      )
+      .filter(Boolean)
+      .join(". ");
+
+    const error = new Error(
+      validationErrors ||
+        (response.status < 500 &&
+          data?.message) ||
+        "We couldn't complete your request. Please try again."
+    );
+
+    error.status = response.status;
+
+    throw error;
+  }
+
+  return data;
+};
+
+export const requestAccountReactivation = (
+  email
+) =>
+  accountReactivationRequest(
+    "request",
+    { email }
+  );
+
+export const verifyAccountReactivationOtp = ({
+  email,
+  otp,
+}) =>
+  accountReactivationRequest(
+    "verify",
+    { email, otp }
+  );
+
+export const confirmAccountReactivation = ({
+  email,
+  otp,
+}) =>
+  accountReactivationRequest(
+    "confirm",
+    { email, otp }
+  );
 
 // ==========================================
-// MARKETPLACE / CUSTOMER PRODUCTS
+// MARKETPLACE PRODUCTS
 // ==========================================
 
 export const getProducts = (
@@ -316,7 +351,6 @@ export const getProducts = (
   request(`/products${query}`, {
     auth: false,
   });
-
 
 export const getProductById = async (
   productId
@@ -327,7 +361,6 @@ export const getProductById = async (
 
   return handleResponse(response);
 };
-
 
 // ==========================================
 // CHECKOUT / ORDERS
@@ -341,7 +374,6 @@ export const createOrder = (
     body: payload,
   });
 
-
 // ==========================================
 // SERVER CART
 // ==========================================
@@ -350,7 +382,6 @@ export const clearServerCart = () =>
   request("/cart", {
     method: "DELETE",
   });
-
 
 export const addServerCartItem = (
   productId,
@@ -364,7 +395,6 @@ export const addServerCartItem = (
     },
   });
 
-
 // ==========================================
 // CATEGORIES
 // ==========================================
@@ -377,6 +407,22 @@ export const getCategories = async () => {
   return handleResponse(response);
 };
 
+export const createCategory = async (
+  categoryData
+) => {
+  return authenticatedRequest(
+    "/api/v1/categories",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(
+        categoryData
+      ),
+    }
+  );
+};
 
 // ==========================================
 // VENDOR PRODUCTS
@@ -394,7 +440,6 @@ export const createProduct = async (
   );
 };
 
-
 export const updateProduct = async (
   productId,
   productData
@@ -408,7 +453,6 @@ export const updateProduct = async (
   );
 };
 
-
 export const deleteProduct = async (
   productId
 ) => {
@@ -420,7 +464,6 @@ export const deleteProduct = async (
   );
 };
 
-
 export const getVendorProducts = async (
   vendorId
 ) => {
@@ -431,21 +474,18 @@ export const getVendorProducts = async (
   return handleResponse(response);
 };
 
-
 // ==========================================
 // VENDOR ORDERS
 // ==========================================
 
-export const getVendorOrders =
-  async () => {
-    return authenticatedRequest(
-      "/api/v1/vendors/orders?limit=50",
-      {
-        method: "GET",
-      }
-    );
-  };
-
+export const getVendorOrders = async () => {
+  return authenticatedRequest(
+    "/api/v1/vendors/orders?limit=50",
+    {
+      method: "GET",
+    }
+  );
+};
 
 export const updateOrderStatus = async (
   orderId,
@@ -456,8 +496,7 @@ export const updateOrderStatus = async (
     {
       method: "PUT",
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         status,
@@ -466,21 +505,18 @@ export const updateOrderStatus = async (
   );
 };
 
-
 // ==========================================
 // VENDOR DASHBOARD
 // ==========================================
 
-export const getVendorDashboard =
-  async () => {
-    return authenticatedRequest(
-      "/api/v1/shops/me/dashboard",
-      {
-        method: "GET",
-      }
-    );
-  };
-
+export const getVendorDashboard = async () => {
+  return authenticatedRequest(
+    "/api/v1/shops/me/dashboard",
+    {
+      method: "GET",
+    }
+  );
+};
 
 // ==========================================
 // VENDOR SHOP PROFILE
@@ -494,14 +530,14 @@ export const createShop = async (
     {
       method: "POST",
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(shopData),
+      body: JSON.stringify(
+        shopData
+      ),
     }
   );
 };
-
 
 export const updateMyShop = async (
   shopData
@@ -511,40 +547,63 @@ export const updateMyShop = async (
     {
       method: "PATCH",
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(shopData),
+      body: JSON.stringify(
+        shopData
+      ),
     }
   );
 };
 
+// ==========================================
+// ADMIN ANALYTICS
+// ==========================================
+
+export const getAdminAnalytics = async () => {
+  return authenticatedRequest(
+    "/api/v1/admin/analytics",
+    {
+      method: "GET",
+    }
+  );
+};
 
 // ==========================================
-// ADMIN
+// ADMIN VENDORS
 // ==========================================
 
-export const getAdminAnalytics =
-  async () => {
-    return authenticatedRequest(
-      "/api/v1/admin/analytics",
-      {
-        method: "GET",
-      }
-    );
-  };
+export const getAdminVendors = async (
+  page = 1,
+  limit = 50
+) => {
+  return authenticatedRequest(
+    `/api/v1/admin/vendors?page=${page}&limit=${limit}`,
+    {
+      method: "GET",
+    }
+  );
+};
 
+// ==========================================
+// ADMIN CUSTOMERS
+// ==========================================
 
-export const getAdminVendors =
-  async () => {
-    return authenticatedRequest(
-      "/api/v1/admin/vendors?limit=50",
-      {
-        method: "GET",
-      }
-    );
-  };
+export const getAdminCustomers = async (
+  page = 1,
+  limit = 50
+) => {
+  return authenticatedRequest(
+    `/api/v1/admin/customers?page=${page}&limit=${limit}`,
+    {
+      method: "GET",
+    }
+  );
+};
 
+// ==========================================
+// ADMIN VENDOR STATUS
+// ==========================================
 
 export const updateVendorStatus = async (
   vendorId,
@@ -555,8 +614,7 @@ export const updateVendorStatus = async (
     {
       method: "PATCH",
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         isActive,
@@ -565,5 +623,48 @@ export const updateVendorStatus = async (
   );
 };
 
+// ==========================================
+// USER PROFILE
+// ==========================================
+
+export const getMyProfile = () =>
+  authenticatedRequest(
+    "/api/v1/users/me",
+    {
+      method: "GET",
+    }
+  );
+
+export const updateMyProfile = (
+  profileData
+) =>
+  authenticatedRequest(
+    "/api/v1/users/update-profile",
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(
+        profileData
+      ),
+    }
+  );
+
+export const changeMyPassword = (
+  passwordData
+) =>
+  authenticatedRequest(
+    "/api/v1/users/change-password",
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(
+        passwordData
+      ),
+    }
+  );
 
 export { API_URL, BASE_URL };

@@ -1,53 +1,142 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import {
   Plus,
   Search,
   Tags,
   Package,
-  Edit3,
-  Trash2,
+  RefreshCw,
 } from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+
+import {
+  getCategories,
+  createCategory,
+  getAdminAnalytics,
+} from "../../services/api";
+
 import "./admin.css";
 
 function AdminCategories() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [totalProducts, setTotalProducts] = useState(null);
 
-  const [categories, setCategories] = useState([
-    { id: 1, name: "Electronics", products: 485, status: "Active" },
-    { id: 2, name: "Fashion", products: 392, status: "Active" },
-    { id: 3, name: "Home & Living", products: 286, status: "Active" },
-    { id: 4, name: "Beauty", products: 214, status: "Active" },
-    { id: 5, name: "Sports", products: 176, status: "Active" },
-    { id: 6, name: "Food & Groceries", products: 292, status: "Active" },
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const addCategory = () => {
+  const loadCategories = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [categoryResponse, analyticsResponse] =
+        await Promise.allSettled([
+          getCategories(),
+          getAdminAnalytics(),
+        ]);
+
+      if (categoryResponse.status === "rejected") {
+        throw categoryResponse.reason;
+      }
+
+      const categoryData =
+        categoryResponse.value?.data ||
+        categoryResponse.value;
+
+      const categoryList = Array.isArray(categoryData)
+        ? categoryData
+        : categoryData?.categories;
+
+      if (!Array.isArray(categoryList)) {
+        throw new Error(
+          "The server returned an unexpected categories response."
+        );
+      }
+
+      setCategories(categoryList);
+
+      if (analyticsResponse.status === "fulfilled") {
+        const analytics =
+          analyticsResponse.value?.data || {};
+
+        setTotalProducts(
+          typeof analytics.totalProducts === "number"
+            ? analytics.totalProducts
+            : null
+        );
+      }
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+      setError(err.message || "Failed to load categories.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const addCategory = async () => {
     const name = window.prompt("Enter category name:");
 
     if (!name?.trim()) return;
 
-    setCategories((previous) => [
-      ...previous,
-      {
-        id: Date.now(),
-        name: name.trim(),
-        products: 0,
-        status: "Active",
-      },
-    ]);
-  };
+    const trimmedName = name.trim();
 
-  const deleteCategory = (id) => {
-    setCategories((previous) =>
-      previous.filter((category) => category.id !== id)
+    const alreadyExists = categories.some(
+      (category) =>
+        category.name?.toLowerCase() ===
+        trimmedName.toLowerCase()
     );
+
+    if (alreadyExists) {
+      setError("This category already exists.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+      setSuccess("");
+
+      await createCategory({
+        name: trimmedName,
+      });
+
+      setSuccess("Category created successfully.");
+
+      await loadCategories();
+    } catch (err) {
+      console.error("Failed to create category:", err);
+
+      setError(
+        err.message || "Failed to create category."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCategories = categories.filter(
+    (category) =>
+      (category.name || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
   );
+
+  const activeCategories = categories.filter(
+    (category) => category.isActive !== false
+  ).length;
+
+  const formatNumber = (number) =>
+    typeof number === "number"
+      ? number.toLocaleString("en-NG")
+      : "—";
 
   return (
     <DashboardLayout role="admin">
@@ -56,31 +145,48 @@ function AdminCategories() {
           <div>
             <h1>Categories</h1>
             <p>
-              Organize marketplace products into clear shopping
-              categories.
+              Organize marketplace products into clear
+              shopping categories.
             </p>
           </div>
 
-          <button className="admin-primary-button" onClick={addCategory}>
+          <button
+            type="button"
+            className="admin-primary-button"
+            onClick={addCategory}
+            disabled={saving || loading}
+          >
             <Plus size={17} />
-            Add Category
+            {saving ? "Adding..." : "Add Category"}
           </button>
         </div>
 
         <div className="admin-mini-stats">
-          <MiniStat icon={Tags} title="Categories" value={categories.length} />
+          <MiniStat
+            icon={Tags}
+            title="Categories"
+            value={
+              loading
+                ? "—"
+                : formatNumber(categories.length)
+            }
+          />
 
           <MiniStat
             icon={Package}
-            title="Categorized Products"
-            value="1,845"
+            title="Total Marketplace Products"
+            value={formatNumber(totalProducts)}
             type="blue"
           />
 
           <MiniStat
             icon={Tags}
             title="Active Categories"
-            value={categories.length}
+            value={
+              loading
+                ? "—"
+                : formatNumber(activeCategories)
+            }
             type="orange"
           />
         </div>
@@ -91,71 +197,168 @@ function AdminCategories() {
               <Search size={17} />
 
               <input
+                type="search"
                 placeholder="Search categories..."
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
               />
             </div>
+
+            <button
+              type="button"
+              className="admin-icon-button"
+              title="Refresh categories"
+              aria-label="Refresh categories"
+              onClick={loadCategories}
+              disabled={loading}
+            >
+              <RefreshCw size={17} />
+            </button>
           </div>
 
-          <div className="admin-table-wrapper">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Products</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+          {error && (
+            <p
+              role="alert"
+              className="login-error"
+              style={{ margin: "15px" }}
+            >
+              {error}
+            </p>
+          )}
 
-              <tbody>
-                {filteredCategories.map((category) => (
-                  <tr key={category.id}>
-                    <td>
-                      <div className="admin-user-cell">
-                        <div className="admin-category-avatar">
-                          <Tags size={18} />
-                        </div>
+          {success && (
+            <p
+              role="status"
+              style={{
+                color: "#16803c",
+                margin: "15px",
+              }}
+            >
+              {success}
+            </p>
+          )}
 
-                        <strong>{category.name}</strong>
-                      </div>
-                    </td>
+          {loading ? (
+            <div
+              style={{
+                padding: "40px",
+                textAlign: "center",
+              }}
+            >
+              Loading categories...
+            </div>
+          ) : (
+            <>
+              <div className="admin-table-wrapper">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Products</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
 
-                    <td>{category.products}</td>
+                  <tbody>
+                    {filteredCategories.map(
+                      (category) => {
+                        const categoryId =
+                          category.id || category._id;
 
-                    <td>
-                      <span className="admin-status active">
-                        {category.status}
-                      </span>
-                    </td>
+                        const isActive =
+                          category.isActive !== false;
 
-                    <td>
-                      <div className="admin-actions">
-                        <button className="admin-icon-button">
-                          <Edit3 size={15} />
-                        </button>
+                        return (
+                          <tr key={categoryId}>
+                            <td>
+                              <div className="admin-user-cell">
+                                <div className="admin-category-avatar">
+                                  <Tags size={18} />
+                                </div>
 
-                        <button
-                          className="admin-icon-button danger"
-                          onClick={() => deleteCategory(category.id)}
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                                <strong>
+                                  {category.name}
+                                </strong>
+                              </div>
+                            </td>
+
+                            <td>
+                              {typeof category.productCount ===
+                              "number"
+                                ? category.productCount
+                                : "—"}
+                            </td>
+
+                            <td>
+                              <span
+                                className={`admin-status ${
+                                  isActive
+                                    ? "active"
+                                    : "inactive"
+                                }`}
+                              >
+                                {isActive
+                                  ? "Active"
+                                  : "Inactive"}
+                              </span>
+                            </td>
+
+                            <td>
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  opacity: 0.65,
+                                }}
+                              >
+                                No actions available
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      }
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredCategories.length === 0 && (
+                <div
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                  }}
+                >
+                  <Tags
+                    size={32}
+                    style={{ opacity: 0.5 }}
+                  />
+
+                  <h3>No categories found</h3>
+
+                  <p>
+                    {searchTerm
+                      ? "Try another search term."
+                      : "Create your first category using the Add Category button."}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </section>
       </section>
     </DashboardLayout>
   );
 }
 
-function MiniStat({ icon: Icon, title, value, type = "green" }) {
+function MiniStat({
+  icon: Icon,
+  title,
+  value,
+  type = "green",
+}) {
   return (
     <article className="admin-mini-stat">
       <div className={`admin-mini-icon ${type}`}>

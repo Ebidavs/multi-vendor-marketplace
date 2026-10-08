@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   Link,
@@ -6,6 +7,8 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Public / Customer Pages
 import Home from "./pages/Home";
@@ -40,7 +43,11 @@ import { getProducts } from "./services/api";
 import { toProduct } from "./services/mappers";
 
 // Vendor Pages
+import VendorRegister from "./pages/vendor/VendorRegister";
+import VendorLogin from "./pages/vendor/VendorLogin";
+import VendorStoreSetup from "./pages/vendor/VendorStoreSetup";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorPersonalProfile from "./pages/vendor/VendorPersonalProfile";
 import VendorProducts from "./pages/vendor/VendorProducts";
 import AddProduct from "./pages/vendor/AddProduct";
 import EditProduct from "./pages/vendor/EditProduct";
@@ -53,6 +60,7 @@ import VendorReviews from "./pages/vendor/VendorReviews";
 import VendorSettings from "./pages/vendor/VendorSettings";
 
 // Admin Pages
+import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminVendors from "./pages/admin/AdminVendors";
@@ -62,6 +70,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSettings from "./pages/admin/AdminSettings";
 
+// Responsive pagination
 const getPageSize = () => {
   if (window.innerWidth < 640) return 4;
   if (window.innerWidth < 1024) return 8;
@@ -75,10 +84,12 @@ export default function App() {
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState("");
   const [productsRetry, setProductsRetry] = useState(0);
+
   const [cartViewed, setCartViewed] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(getPageSize);
 
+  // Cart
   const {
     cartItems,
     handleAddToCart,
@@ -98,6 +109,7 @@ export default function App() {
     handleIncreaseQuantity(...args);
   };
 
+  // Product filtering
   const {
     searchQuery,
     setSearchQuery,
@@ -117,35 +129,31 @@ export default function App() {
     handleResetFilters,
   } = useProductFilters(products);
 
+  // Pagination
   const pageCount = Math.ceil(
     filteredProducts.length / pageSize
   );
 
-  const pageStart =
-    (currentPage - 1) * pageSize;
+  const pageStart = (currentPage - 1) * pageSize;
 
-  const paginatedProducts =
-    filteredProducts.slice(
-      pageStart,
-      pageStart + pageSize
-    );
+  const paginatedProducts = filteredProducts.slice(
+    pageStart,
+    pageStart + pageSize
+  );
 
   const firstVisiblePage = Math.max(
     1,
-    Math.min(
-      currentPage - 2,
-      pageCount - 4
-    )
+    Math.min(currentPage - 2, pageCount - 4)
   );
 
   const visiblePages = Array.from(
     {
       length: Math.min(pageCount, 5),
     },
-    (_, index) =>
-      firstVisiblePage + index
+    (_, index) => firstVisiblePage + index
   );
 
+  // Load marketplace products
   useEffect(() => {
     let isCurrent = true;
 
@@ -154,28 +162,54 @@ export default function App() {
       setProductsError("");
 
       try {
-        const firstPage = await getProducts("?page=1&limit=50");
+        const firstPage = await getProducts(
+          "?page=1&limit=50"
+        );
+
         if (!Array.isArray(firstPage?.products)) {
-          throw new Error("The product service returned an invalid response.");
+          throw new Error(
+            "The product service returned an invalid response."
+          );
         }
 
-        const totalPages = Number(firstPage.pagination?.pages) || 1;
-        const fetchedProducts = [...firstPage.products];
+        const totalPages =
+          Number(firstPage.pagination?.pages) || 1;
 
-        for (let page = 2; page <= totalPages; page += 1) {
-          const pageResult = await getProducts(`?page=${page}&limit=50`);
+        const fetchedProducts = [
+          ...firstPage.products,
+        ];
+
+        for (
+          let page = 2;
+          page <= totalPages;
+          page += 1
+        ) {
+          const pageResult = await getProducts(
+            `?page=${page}&limit=50`
+          );
+
           if (!Array.isArray(pageResult?.products)) {
-            throw new Error("The product service returned an invalid response.");
+            throw new Error(
+              "The product service returned an invalid response."
+            );
           }
-          fetchedProducts.push(...pageResult.products);
+
+          fetchedProducts.push(
+            ...pageResult.products
+          );
         }
 
         if (isCurrent) {
-          setProducts(fetchedProducts.map(toProduct));
+          setProducts(
+            fetchedProducts.map(toProduct)
+          );
         }
       } catch (error) {
         if (isCurrent) {
-          setProductsError(error.message || "Unable to load products.");
+          setProductsError(
+            error.message ||
+              "Unable to load products."
+          );
         }
       } finally {
         if (isCurrent) {
@@ -191,22 +225,26 @@ export default function App() {
     };
   }, [productsRetry]);
 
+  // Responsive page size
   useEffect(() => {
-    const updatePageSize = () =>
+    const updatePageSize = () => {
       setPageSize(getPageSize());
+    };
 
     window.addEventListener(
       "resize",
       updatePageSize
     );
 
-    return () =>
+    return () => {
       window.removeEventListener(
         "resize",
         updatePageSize
       );
+    };
   }, []);
 
+  // Marketplace
   const marketplacePage = (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Search */}
@@ -223,16 +261,12 @@ export default function App() {
       <div className="py-2">
         <CategoryBar
           categories={categoriesList}
-          selectedCategory={
-            selectedCategory
-          }
-          onSelectCategory={
-            setSelectedCategory
-          }
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
         />
       </div>
 
-      {/* Products / Filters */}
+      {/* Products and filters */}
       <div className="flex flex-col gap-8 pt-2 xl:flex-row">
         <FilterSidebar
           priceFloor={priceFloor}
@@ -242,25 +276,34 @@ export default function App() {
           maxPrice={maxPrice}
           onMaxPriceChange={setMaxPrice}
           inStockOnly={inStockOnly}
-          onInStockChange={
-            setInStockOnly
-          }
-          onResetFilters={
-            handleResetFilters
-          }
+          onInStockChange={setInStockOnly}
+          onResetFilters={handleResetFilters}
         />
 
         <div className="flex-1">
           {productsLoading ? (
-            <p className="py-8 text-center text-sm text-gray-500" role="status">
+            <p
+              className="py-8 text-center text-sm text-gray-500"
+              role="status"
+            >
               Loading products...
             </p>
           ) : productsError ? (
-            <div className="py-8 text-center" role="alert">
-              <p className="text-sm text-gray-600">{productsError}</p>
+            <div
+              className="py-8 text-center"
+              role="alert"
+            >
+              <p className="text-sm text-gray-600">
+                {productsError}
+              </p>
+
               <button
                 type="button"
-                onClick={() => setProductsRetry((retry) => retry + 1)}
+                onClick={() =>
+                  setProductsRetry(
+                    (retry) => retry + 1
+                  )
+                }
                 className="mt-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
               >
                 Try again
@@ -280,51 +323,53 @@ export default function App() {
             />
           )}
 
-          {!productsLoading && !productsError && pageCount > 1 && (
-            <nav
-              aria-label="Product pages"
-              className="mt-8 flex flex-wrap justify-center gap-1 sm:gap-2"
-            >
-              {pageCount > 5 && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="First page"
-                    onClick={() =>
-                      setCurrentPage(1)
-                    }
-                    disabled={
-                      currentPage === 1
-                    }
-                    className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    |&lt;
-                  </button>
+          {/* Pagination */}
+          {!productsLoading &&
+            !productsError &&
+            pageCount > 1 && (
+              <nav
+                aria-label="Product pages"
+                className="mt-8 flex flex-wrap justify-center gap-1 sm:gap-2"
+              >
+                {pageCount > 5 && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="First page"
+                      onClick={() =>
+                        setCurrentPage(1)
+                      }
+                      disabled={
+                        currentPage === 1
+                      }
+                      className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      |&lt;
+                    </button>
 
-                  <button
-                    type="button"
-                    aria-label="Previous page"
-                    onClick={() =>
-                      setCurrentPage(
-                        (page) =>
-                          Math.max(
-                            1,
-                            page - 1
-                          )
-                      )
-                    }
-                    disabled={
-                      currentPage === 1
-                    }
-                    className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    &lt;
-                  </button>
-                </>
-              )}
+                    <button
+                      type="button"
+                      aria-label="Previous page"
+                      onClick={() =>
+                        setCurrentPage(
+                          (page) =>
+                            Math.max(
+                              1,
+                              page - 1
+                            )
+                        )
+                      }
+                      disabled={
+                        currentPage === 1
+                      }
+                      className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      &lt;
+                    </button>
+                  </>
+                )}
 
-              {visiblePages.map(
-                (page) => (
+                {visiblePages.map((page) => (
                   <button
                     key={page}
                     type="button"
@@ -345,55 +390,55 @@ export default function App() {
                   >
                     {page}
                   </button>
-                )
-              )}
+                ))}
 
-              {pageCount > 5 && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="Next page"
-                    onClick={() =>
-                      setCurrentPage(
-                        (page) =>
-                          Math.min(
-                            pageCount,
-                            page + 1
-                          )
-                      )
-                    }
-                    disabled={
-                      currentPage ===
-                      pageCount
-                    }
-                    className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    &gt;
-                  </button>
-
-                  <button
-                    type="button"
-                    aria-label="Last page"
-                    onClick={() =>
-                      setCurrentPage(
+                {pageCount > 5 && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Next page"
+                      onClick={() =>
+                        setCurrentPage(
+                          (page) =>
+                            Math.min(
+                              pageCount,
+                              page + 1
+                            )
+                        )
+                      }
+                      disabled={
+                        currentPage ===
                         pageCount
-                      )
-                    }
-                    disabled={
-                      currentPage ===
-                      pageCount
-                    }
-                    className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    &gt;|
-                  </button>
-                </>
-              )}
-            </nav>
-          )}
+                      }
+                      className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      &gt;
+                    </button>
+
+                    <button
+                      type="button"
+                      aria-label="Last page"
+                      onClick={() =>
+                        setCurrentPage(
+                          pageCount
+                        )
+                      }
+                      disabled={
+                        currentPage ===
+                        pageCount
+                      }
+                      className="h-11 min-w-11 rounded-md border border-gray-200 bg-white px-2 text-gray-700 transition hover:border-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      &gt;|
+                    </button>
+                  </>
+                )}
+              </nav>
+            )}
         </div>
       </div>
 
+      {/* Cart bar */}
       <CartBar
         cartItems={cartItems}
         onClearCart={handleClearCart}
@@ -403,9 +448,7 @@ export default function App() {
         onDecreaseQuantity={
           handleDecreaseQuantity
         }
-        onRemoveItem={
-          handleRemoveItem
-        }
+        onRemoveItem={handleRemoveItem}
         onCheckout={() =>
           navigate("/checkout")
         }
@@ -415,7 +458,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Current main navigation */}
       <Navbar
         cartCount={
           cartViewed
@@ -432,9 +474,7 @@ export default function App() {
       />
 
       <Routes>
-        {/* =========================
-            PUBLIC / CUSTOMER
-        ========================= */}
+        {/* PUBLIC / CUSTOMER */}
 
         <Route
           path="/"
@@ -452,11 +492,6 @@ export default function App() {
         />
 
         <Route
-          path="/vendor/register"
-          element={<Register role="vendor" />}
-        />
-
-        <Route
           path="/forgot-password"
           element={<ForgotPassword />}
         />
@@ -466,6 +501,7 @@ export default function App() {
           element={<ResetPassword />}
         />
 
+        {/* New account reactivation page */}
         <Route
           path="/reactivate-account"
           element={<AccountReactivation />}
@@ -496,11 +532,9 @@ export default function App() {
           element={
             <CartPage
               cartItems={cartItems}
-              onClearCart={
-                handleClearCart
-              }
+              onClearCart={handleClearCart}
               onIncreaseQuantity={
-                increaseQuantity
+                handleIncreaseQuantity
               }
               onDecreaseQuantity={
                 handleDecreaseQuantity
@@ -517,9 +551,7 @@ export default function App() {
           element={
             <Checkout
               cartItems={cartItems}
-              onClearCart={
-                handleClearCart
-              }
+              onClearCart={handleClearCart}
             />
           }
         />
@@ -530,9 +562,7 @@ export default function App() {
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
               <ProductDetail
                 products={products}
-                onAddToCart={
-                  addToCart
-                }
+                onAddToCart={addToCart}
               />
             </main>
           }
@@ -546,9 +576,7 @@ export default function App() {
                 vendors={dummyVendors}
                 products={products}
                 cartItems={cartItems}
-                onAddToCart={
-                  addToCart
-                }
+                onAddToCart={addToCart}
                 onIncreaseQuantity={
                   increaseQuantity
                 }
@@ -560,148 +588,175 @@ export default function App() {
           }
         />
 
-        {/* =========================
-            VENDOR
-        ========================= */}
+        {/* VENDOR AUTHENTICATION */}
 
         <Route
-          path="/vendor"
+          path="/vendor/login"
+          element={<VendorLogin />}
+        />
+
+        <Route
+          path="/vendor/register"
+          element={<VendorRegister />}
+        />
+
+        {/* PROTECTED VENDOR ROUTES */}
+
+        <Route
           element={
-            <Navigate
-              to="/vendor/dashboard"
-              replace
+            <ProtectedRoute
+              allowedRole="vendor"
             />
           }
-        />
+        >
+          <Route
+            path="/vendor"
+            element={
+              <Navigate
+                to="/vendor/dashboard"
+                replace
+              />
+            }
+          />
+
+          <Route
+            path="/vendor/setup"
+            element={<VendorStoreSetup />}
+          />
+
+          <Route
+            path="/vendor/dashboard"
+            element={<VendorDashboard />}
+          />
+
+          <Route
+            path="/vendor/personal-profile"
+            element={
+              <VendorPersonalProfile />
+            }
+          />
+
+          <Route
+            path="/vendor/products"
+            element={<VendorProducts />}
+          />
+
+          <Route
+            path="/vendor/products/new"
+            element={<AddProduct />}
+          />
+
+          <Route
+            path="/vendor/products/:id/edit"
+            element={<EditProduct />}
+          />
+
+          <Route
+            path="/vendor/orders"
+            element={<VendorOrders />}
+          />
+
+          <Route
+            path="/vendor/orders/:orderId"
+            element={
+              <VendorOrderDetails />
+            }
+          />
+
+          <Route
+            path="/vendor/profile"
+            element={<VendorStoreProfile />}
+          />
+
+          <Route
+            path="/vendor/customers"
+            element={<VendorCustomers />}
+          />
+
+          <Route
+            path="/vendor/analytics"
+            element={<VendorAnalytics />}
+          />
+
+          <Route
+            path="/vendor/reviews"
+            element={<VendorReviews />}
+          />
+
+          <Route
+            path="/vendor/settings"
+            element={<VendorSettings />}
+          />
+        </Route>
+
+        {/* ADMIN AUTHENTICATION */}
 
         <Route
-          path="/vendor/dashboard"
+          path="/admin/login"
+          element={<AdminLogin />}
+        />
+
+        {/* PROTECTED ADMIN ROUTES */}
+
+        <Route
           element={
-            <VendorDashboard />
-          }
-        />
-
-        <Route
-          path="/vendor/products"
-          element={
-            <VendorProducts />
-          }
-        />
-
-        <Route
-          path="/vendor/products/new"
-          element={<AddProduct />}
-        />
-
-        <Route
-          path="/vendor/products/:id/edit"
-          element={<EditProduct />}
-        />
-
-        <Route
-          path="/vendor/orders"
-          element={<VendorOrders />}
-        />
-
-        <Route
-          path="/vendor/orders/:orderId"
-          element={
-            <VendorOrderDetails />
-          }
-        />
-
-        <Route
-          path="/vendor/profile"
-          element={
-            <VendorStoreProfile />
-          }
-        />
-
-        <Route
-          path="/vendor/customers"
-          element={
-            <VendorCustomers />
-          }
-        />
-
-        <Route
-          path="/vendor/analytics"
-          element={
-            <VendorAnalytics />
-          }
-        />
-
-        <Route
-          path="/vendor/reviews"
-          element={<VendorReviews />}
-        />
-
-        <Route
-          path="/vendor/settings"
-          element={<VendorSettings />}
-        />
-
-        {/* =========================
-            ADMIN
-        ========================= */}
-
-        <Route
-          path="/admin"
-          element={
-            <Navigate
-              to="/admin/dashboard"
-              replace
+            <ProtectedRoute
+              allowedRole="admin"
             />
           }
-        />
+        >
+          <Route
+            path="/admin"
+            element={
+              <Navigate
+                to="/admin/dashboard"
+                replace
+              />
+            }
+          />
 
-        <Route
-          path="/admin/dashboard"
-          element={
-            <AdminDashboard />
-          }
-        />
+          <Route
+            path="/admin/dashboard"
+            element={<AdminDashboard />}
+          />
 
-        <Route
-          path="/admin/vendors"
-          element={<AdminVendors />}
-        />
+          <Route
+            path="/admin/vendors"
+            element={<AdminVendors />}
+          />
 
-        <Route
-          path="/admin/users"
-          element={<AdminUsers />}
-        />
+          <Route
+            path="/admin/users"
+            element={<AdminUsers />}
+          />
 
-        <Route
-          path="/admin/products"
-          element={<AdminProducts />}
-        />
+          <Route
+            path="/admin/products"
+            element={<AdminProducts />}
+          />
 
-        <Route
-          path="/admin/categories"
-          element={
-            <AdminCategories />
-          }
-        />
+          <Route
+            path="/admin/categories"
+            element={<AdminCategories />}
+          />
 
-        <Route
-          path="/admin/orders"
-          element={<AdminOrders />}
-        />
+          <Route
+            path="/admin/orders"
+            element={<AdminOrders />}
+          />
 
-        <Route
-          path="/admin/reports"
-          element={<AdminReports />}
-        />
+          <Route
+            path="/admin/reports"
+            element={<AdminReports />}
+          />
 
-        <Route
-          path="/admin/settings"
-          element={<AdminSettings />}
-        />
+          <Route
+            path="/admin/settings"
+            element={<AdminSettings />}
+          />
+        </Route>
 
-        {/* =========================
-            404
-        ========================= */}
+        {/* 404 PAGE */}
 
         <Route
           path="*"
