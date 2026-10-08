@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,10 +12,13 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+
 import {
   vendorSearchData,
   adminSearchData,
 } from "../../data/dashboardSearchData";
+
+import { clearToken } from "../../services/api";
 
 function DashboardHeader({ role = "vendor", onMenuClick }) {
   const isAdmin = role === "admin";
@@ -22,21 +26,52 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  });
 
   const profileRef = useRef(null);
   const searchRef = useRef(null);
-
   const navigate = useNavigate();
 
-  // ========================================
-  // VENDOR SEARCH ITEMS
-  // ========================================
+  useEffect(() => {
+    const refreshUser = () => {
+      try {
+        setCurrentUser(
+          JSON.parse(localStorage.getItem("user") || "null")
+        );
+      } catch {
+        setCurrentUser(null);
+      }
+    };
 
-  const searchItems = isAdmin ? adminSearchData : vendorSearchData;
+    window.addEventListener("storage", refreshUser);
+    window.addEventListener("user-updated", refreshUser);
 
-  // ========================================
-  // FILTER SEARCH RESULTS
-  // ========================================
+    return () => {
+      window.removeEventListener("storage", refreshUser);
+      window.removeEventListener("user-updated", refreshUser);
+    };
+  }, []);
+
+  const displayName =
+    currentUser?.name ||
+    (isAdmin ? "Administrator" : "Vendor");
+
+  const initials = displayName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+
+  const searchItems = isAdmin
+    ? adminSearchData
+    : vendorSearchData;
 
   const filteredSearchItems = searchItems
     .filter((item) => {
@@ -46,8 +81,9 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
         item.title,
         item.subtitle,
         item.type,
-        ...item.keywords,
+        ...(item.keywords || []),
       ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
@@ -55,17 +91,19 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
     })
     .slice(0, 8);
 
-  // ========================================
-  // CLOSE PROFILE WHEN CLICKING OUTSIDE
-  // ========================================
-
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target)
+      ) {
         setProfileOpen(false);
       }
 
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target)
+      ) {
         setSearchOpen(false);
       }
     };
@@ -73,13 +111,12 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
     };
   }, []);
-
-  // ========================================
-  // NAVIGATION
-  // ========================================
 
   const goTo = (path) => {
     setProfileOpen(false);
@@ -88,29 +125,28 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
 
   const goToSearchResult = (path) => {
     navigate(path);
-
     setSearchTerm("");
     setSearchOpen(false);
   };
 
-  // ========================================
-  // LOGOUT
-  // ========================================
-
   const handleLogout = () => {
     setProfileOpen(false);
 
-    alert("Logout will be connected when authentication is integrated.");
+    clearToken();
+    localStorage.removeItem("user");
+
+    window.dispatchEvent(new Event("user-updated"));
+
+    navigate(isAdmin ? "/login" : "/vendor/login", {
+      replace: true,
+    });
   };
 
   return (
     <header className="dashboard-header">
-      {/* =====================================
-          LEFT SIDE
-      ====================================== */}
-
       <div className="header-left">
         <button
+          type="button"
           className="mobile-menu-button"
           onClick={onMenuClick}
           aria-label="Open dashboard menu"
@@ -118,13 +154,7 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
           <Menu size={22} />
         </button>
 
-        {/* ===================================
-            DASHBOARD SEARCH
-        ==================================== */}
-
         <div className="dashboard-search-wrapper" ref={searchRef}>
-          {/* ORIGINAL SEARCH BAR */}
-
           <div className="dashboard-search">
             <Search size={19} />
 
@@ -138,7 +168,6 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
               }
               onChange={(event) => {
                 setSearchTerm(event.target.value);
-
                 setSearchOpen(true);
               }}
               onFocus={() => {
@@ -147,8 +176,13 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
                 }
               }}
               onKeyDown={(event) => {
-                if (event.key === "Enter" && filteredSearchItems.length > 0) {
-                  goToSearchResult(filteredSearchItems[0].path);
+                if (
+                  event.key === "Enter" &&
+                  filteredSearchItems.length > 0
+                ) {
+                  goToSearchResult(
+                    filteredSearchItems[0].path
+                  );
                 }
 
                 if (event.key === "Escape") {
@@ -158,16 +192,17 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
             />
           </div>
 
-          {/* SEARCH RESULTS */}
-
           {searchOpen && searchTerm.trim() && (
             <div className="dashboard-search-results">
               {filteredSearchItems.length > 0 ? (
                 filteredSearchItems.map((item) => (
                   <button
+                    type="button"
                     key={item.path}
                     className="dashboard-search-result"
-                    onClick={() => goToSearchResult(item.path)}
+                    onClick={() =>
+                      goToSearchResult(item.path)
+                    }
                   >
                     <div className="search-result-icon">
                       <Search size={15} />
@@ -175,7 +210,6 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
 
                     <div className="search-result-information">
                       <strong>{item.title}</strong>
-
                       <span>{item.subtitle}</span>
                     </div>
                   </button>
@@ -186,8 +220,9 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
 
                   <div>
                     <strong>No results found</strong>
-
-                    <span>Try searching for another dashboard section.</span>
+                    <span>
+                      Try searching for another dashboard section.
+                    </span>
                   </div>
                 </div>
               )}
@@ -196,35 +231,44 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
         </div>
       </div>
 
-      {/* =====================================
-          RIGHT SIDE
-      ====================================== */}
-
       <div className="header-actions">
-        {/* NOTIFICATION */}
-
-        <button className="notification-button" aria-label="Notifications">
+        <button
+          type="button"
+          className="notification-button"
+          aria-label="Notifications"
+        >
           <Bell size={21} />
-
           <span className="notification-dot"></span>
         </button>
 
-        {/* ===================================
-            PROFILE
-        ==================================== */}
-
-        <div className="profile-dropdown-wrapper" ref={profileRef}>
-          {/* ORIGINAL PROFILE DESIGN */}
-
+        <div
+          className="profile-dropdown-wrapper"
+          ref={profileRef}
+        >
           <div
             className="dashboard-profile"
-            onClick={() => setProfileOpen((previous) => !previous)}
+            role="button"
+            tabIndex={0}
+            onClick={() =>
+              setProfileOpen((previous) => !previous)
+            }
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" ||
+                event.key === " "
+              ) {
+                event.preventDefault();
+                setProfileOpen((previous) => !previous);
+              }
+            }}
           >
-            <div className="profile-avatar">{isAdmin ? "AD" : "VD"}</div>
+            <div className="profile-avatar">
+              {initials}
+            </div>
 
             <div className="profile-information">
               <span className="profile-name">
-                {isAdmin ? "Administrator" : "MarketHub Vendor"}
+                {displayName}
               </span>
 
               <span className="profile-role">
@@ -240,81 +284,75 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
             />
           </div>
 
-          {/* ===================================
-              PROFILE DROPDOWN
-          ==================================== */}
-
           {profileOpen && (
             <div className="profile-dropdown-menu">
               <div className="profile-dropdown-header">
                 <div className="profile-dropdown-avatar">
-                  {isAdmin ? "AD" : "VD"}
+                  {initials}
                 </div>
 
                 <div>
-                  <strong>
-                    {isAdmin ? "Administrator" : "MarketHub Vendor"}
-                  </strong>
+                  <strong>{displayName}</strong>
 
-                  <span>{isAdmin ? "Admin Account" : "Vendor Account"}</span>
+                  <span>
+                    {isAdmin
+                      ? "Admin Account"
+                      : "Vendor Account"}
+                  </span>
                 </div>
               </div>
 
               <div className="profile-dropdown-divider"></div>
 
-              {/* MY PROFILE */}
-
               <button
+                type="button"
                 className="profile-dropdown-option"
-                onClick={() => {
-                  setProfileOpen(false);
-
-                  alert(
-                    "Profile page will be connected to the authenticated user.",
-                  );
-                }}
+                onClick={() =>
+                  goTo(
+                    isAdmin
+                      ? "/admin/personal-profile"
+                      : "/vendor/personal-profile"
+                  )
+                }
               >
                 <User size={17} />
-
                 <span>My Profile</span>
               </button>
 
-              {/* VENDOR STORE PROFILE */}
-
               {!isAdmin && (
                 <button
+                  type="button"
                   className="profile-dropdown-option"
-                  onClick={() => goTo("/vendor/store")}
+                  onClick={() => goTo("/vendor/profile")}
                 >
                   <Store size={17} />
-
                   <span>Store Profile</span>
                 </button>
               )}
 
-              {/* SETTINGS */}
-
               <button
+                type="button"
                 className="profile-dropdown-option"
                 onClick={() =>
-                  goTo(isAdmin ? "/admin/settings" : "/vendor/settings")
+                  goTo(
+                    isAdmin
+                      ? "/admin/settings"
+                      : "/vendor/settings"
+                  )
                 }
               >
                 <Settings size={17} />
-
                 <span>Settings</span>
               </button>
 
               <div className="profile-dropdown-divider"></div>
 
-              {/* LOGOUT */}
-
               <button
+                type="button"
                 className="profile-dropdown-option logout-option"
                 onClick={handleLogout}
               >
                 <LogOut size={17} />
-
                 <span>Log Out</span>
               </button>
             </div>

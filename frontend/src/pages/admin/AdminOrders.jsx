@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Search,
@@ -5,7 +6,7 @@ import {
   Clock,
   Truck,
   CheckCircle2,
-  Eye,
+  RefreshCw,
 } from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -15,56 +16,19 @@ function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const orders = [
-    {
-      id: "#MKT1032",
-      customer: "David Johnson",
-      vendor: "TechHub Store",
-      amount: "₦85,000",
-      date: "Sep 30, 2026",
-      status: "Delivered",
-    },
-    {
-      id: "#MKT1031",
-      customer: "Sarah Williams",
-      vendor: "Urban Fashion",
-      amount: "₦58,000",
-      date: "Sep 30, 2026",
-      status: "Processing",
-    },
-    {
-      id: "#MKT1030",
-      customer: "Michael James",
-      vendor: "Home Essentials",
-      amount: "₦120,500",
-      date: "Sep 29, 2026",
-      status: "Shipped",
-    },
-    {
-      id: "#MKT1029",
-      customer: "Grace Peter",
-      vendor: "TechHub Store",
-      amount: "₦45,000",
-      date: "Sep 29, 2026",
-      status: "Pending",
-    },
-    {
-      id: "#MKT1028",
-      customer: "Daniel Thomas",
-      vendor: "Beauty Corner",
-      amount: "₦32,500",
-      date: "Sep 28, 2026",
-      status: "Cancelled",
-    },
-  ];
+  // Admin-wide order retrieval is not yet
+  // supported by the documented backend API.
+  const orders = [];
 
   const filteredOrders = orders.filter((order) => {
-    const matchesSearch = `${order.id} ${order.customer} ${order.vendor}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      `${order.id} ${order.customer} ${order.vendor}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "All" || order.status === statusFilter;
+      statusFilter === "All" ||
+      order.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -76,8 +40,8 @@ function AdminOrders() {
           <div>
             <h1>Orders</h1>
             <p>
-              Monitor transactions and order activity across all
-              MarketHub vendors.
+              Monitor transactions and order activity
+              across all Xi Market vendors.
             </p>
           </div>
         </div>
@@ -86,27 +50,27 @@ function AdminOrders() {
           <OrderStat
             icon={ShoppingBag}
             title="Total Orders"
-            value="1,327"
+            value="—"
           />
 
           <OrderStat
             icon={Clock}
             title="Pending"
-            value="38"
+            value="—"
             type="orange"
           />
 
           <OrderStat
             icon={Truck}
             title="In Transit"
-            value="74"
+            value="—"
             type="blue"
           />
 
           <OrderStat
             icon={CheckCircle2}
             title="Delivered"
-            value="1,185"
+            value="—"
             type="green"
           />
         </div>
@@ -117,22 +81,39 @@ function AdminOrders() {
               <Search size={17} />
 
               <input
+                type="search"
                 placeholder="Search orders..."
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
               />
             </div>
 
             <select
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
+              onChange={(event) =>
+                setStatusFilter(event.target.value)
+              }
             >
-              <option value="All">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="Processing">Processing</option>
-              <option value="Shipped">Shipped</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="All">
+                All Statuses
+              </option>
+              <option value="Pending">
+                Pending
+              </option>
+              <option value="Processing">
+                Processing
+              </option>
+              <option value="Shipped">
+                Shipped
+              </option>
+              <option value="Delivered">
+                Delivered
+              </option>
+              <option value="Cancelled">
+                Cancelled
+              </option>
             </select>
           </div>
 
@@ -175,14 +156,42 @@ function AdminOrders() {
                     </td>
 
                     <td>
-                      <button className="admin-icon-button">
-                        <Eye size={16} />
-                      </button>
+                      <span>—</span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div
+            style={{
+              padding: "45px 20px",
+              textAlign: "center",
+            }}
+          >
+            <ShoppingBag
+              size={38}
+              style={{
+                opacity: 0.4,
+                marginBottom: "12px",
+              }}
+            />
+
+            <h3>
+              Order information unavailable
+            </h3>
+
+            <p>
+              The backend does not currently
+              provide an admin-wide orders endpoint.
+            </p>
+
+            <p>
+              Once the endpoint is available,
+              orders and statistics can be
+              displayed here automatically.
+            </p>
           </div>
         </section>
       </section>
@@ -190,7 +199,12 @@ function AdminOrders() {
   );
 }
 
-function OrderStat({ icon: Icon, title, value, type = "purple" }) {
+function OrderStat({
+  icon: Icon,
+  title,
+  value,
+  type = "purple",
+}) {
   return (
     <article className={`admin-order-stat ${type}`}>
       <div className="admin-order-stat-icon">

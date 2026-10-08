@@ -1,20 +1,16 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { loginUser, setToken } from "../services/api";
 import "./login.css";
 
-import {
-  loginUser,
-  setToken,
-} from "../services/api";
+function AdminLogin() {
+  const navigate = useNavigate();
 
-function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,27 +24,20 @@ function Login() {
         password,
       });
 
-      const token =
-        response?.data?.token ||
-        response?.token;
-
-      const user =
-        response?.data?.user ||
-        response?.user;
+      const token = response?.data?.token;
+      const user = response?.data?.user;
 
       if (!token || !user) {
         throw new Error(
-          "Invalid login response from server."
+          "Invalid login response from the server."
         );
       }
 
-      const role = String(
-        user.role || ""
-      ).toLowerCase();
-
-      if (role !== "customer") {
+      if (
+        String(user.role).toLowerCase() !== "admin"
+      ) {
         throw new Error(
-          "This login page is for customers only. Please use your account's designated login page."
+          "Access denied. This login is for administrators only."
         );
       }
 
@@ -63,13 +52,12 @@ function Login() {
         new Event("user-updated")
       );
 
-      navigate("/products", {
+      navigate("/admin/dashboard", {
         replace: true,
       });
-
     } catch (err) {
       setError(
-        err.message || "Login failed"
+        err.message || "Admin login failed."
       );
     } finally {
       setLoading(false);
@@ -79,28 +67,26 @@ function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-
         <div className="login-brand">
           <h1>Xi Market</h1>
         </div>
 
-        <h2>Welcome Back</h2>
+        <h2>Admin Login</h2>
 
         <p className="login-subtitle">
-          Sign in to your Xi Market account
+          Sign in to manage the Xi Market marketplace
         </p>
 
         <form onSubmit={handleSubmit}>
-
           <div className="login-field">
-            <label htmlFor="email">
+            <label htmlFor="admin-email">
               Email Address
             </label>
 
             <input
               type="email"
-              id="email"
-              placeholder="Enter your email"
+              id="admin-email"
+              placeholder="Enter admin email"
               value={email}
               onChange={(e) =>
                 setEmail(e.target.value)
@@ -110,14 +96,14 @@ function Login() {
           </div>
 
           <div className="login-field">
-            <label htmlFor="password">
+            <label htmlFor="admin-password">
               Password
             </label>
 
             <input
               type="password"
-              id="password"
-              placeholder="Enter your password"
+              id="admin-password"
+              placeholder="Enter password"
               value={password}
               onChange={(e) =>
                 setPassword(e.target.value)
@@ -144,23 +130,20 @@ function Login() {
             disabled={loading}
           >
             {loading
-              ? "Logging in..."
-              : "Login"}
+              ? "Signing In..."
+              : "Login as Admin"}
           </button>
-
         </form>
 
         <p className="register-text">
-          Don't have an account?{" "}
-          <Link to="/register">
-            Register
+          Not an administrator?{" "}
+          <Link to="/login">
+            Customer Login
           </Link>
         </p>
-
       </div>
     </div>
   );
 }
 
-export default Login;
-
+export default AdminLogin;

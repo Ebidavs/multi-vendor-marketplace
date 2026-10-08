@@ -1,38 +1,132 @@
+
+import { useEffect, useState } from "react";
 import {
   TrendingUp,
   ShoppingBag,
   Users,
   Store,
   Download,
-  ArrowUpRight,
+  Package,
+  RefreshCw,
 } from "lucide-react";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import { getAdminAnalytics } from "../../services/api";
+
 import "./admin.css";
 
 function AdminReports() {
-  const topVendors = [
-    {
-      name: "TechHub Store",
-      orders: 342,
-      revenue: "₦2,850,000",
-    },
-    {
-      name: "Urban Fashion",
-      orders: 284,
-      revenue: "₦1,980,000",
-    },
-    {
-      name: "Home Essentials",
-      orders: 219,
-      revenue: "₦1,420,500",
-    },
-    {
-      name: "Beauty Corner",
-      orders: 184,
-      revenue: "₦985,000",
-    },
-  ];
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAnalytics = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await getAdminAnalytics();
+
+        if (cancelled) return;
+
+        const data = response?.data;
+
+        if (!data || typeof data !== "object") {
+          throw new Error(
+            "Invalid analytics response from the server."
+          );
+        }
+
+        setAnalytics(data);
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error(
+          "Failed to load admin reports:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Unable to load marketplace analytics."
+        );
+
+        setAnalytics(null);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadAnalytics();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
+
+  const formatNumber = (value) => {
+    if (typeof value !== "number") {
+      return "—";
+    }
+
+    return value.toLocaleString("en-NG");
+  };
+
+  const exportReport = () => {
+    if (!analytics) return;
+
+    const rows = [
+      ["Metric", "Value"],
+      ["Total Users", analytics.totalUsers],
+      ["Total Customers", analytics.totalCustomers],
+      ["Total Vendors", analytics.totalVendors],
+      ["Total Shops", analytics.totalShops],
+      ["Total Products", analytics.totalProducts],
+      ["Total Revenue", analytics.totalRevenue],
+    ];
+
+    const csv = rows
+      .map((row) =>
+        row
+          .map((value) => {
+            const text =
+              value === null || value === undefined
+                ? "Unavailable"
+                : String(value);
+
+            return `"${text.replace(/"/g, '""')}"`;
+          })
+          .join(",")
+      )
+      .join("\r\n");
+
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `xi-market-report-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
+  const unavailableText =
+    "This metric is not yet available from the backend.";
 
   return (
     <DashboardLayout role="admin">
@@ -41,46 +135,71 @@ function AdminReports() {
           <div>
             <h1>Reports & Analytics</h1>
             <p>
-              Understand marketplace growth, revenue and vendor
-              performance.
+              Understand marketplace activity,
+              customer growth and vendor performance.
             </p>
           </div>
 
           <button
+            type="button"
             className="admin-secondary-button"
-            onClick={() => alert("Report export will connect to the backend.")}
+            onClick={exportReport}
+            disabled={loading || !analytics}
+            title="Download available analytics as CSV"
           >
             <Download size={16} />
             Export Report
           </button>
         </div>
 
+        {error && (
+          <p
+            className="login-error"
+            role="alert"
+            style={{ marginBottom: "20px" }}
+          >
+            {error}
+          </p>
+        )}
+
         <div className="admin-report-stats">
           <ReportStat
             title="Marketplace Revenue"
-            value="₦8,450,000"
-            change="+14.2%"
+            value="—"
+            note="Not yet available"
             currency
           />
 
           <ReportStat
-            title="Orders"
-            value="1,327"
-            change="+16.8%"
-            icon={ShoppingBag}
+            title="Total Products"
+            value={
+              loading
+                ? "..."
+                : formatNumber(analytics?.totalProducts)
+            }
+            note="Marketplace listings"
+            icon={Package}
           />
 
           <ReportStat
             title="Customers"
-            value="2,297"
-            change="+12.5%"
+            value={
+              loading
+                ? "..."
+                : formatNumber(analytics?.totalCustomers)
+            }
+            note="Registered customers"
             icon={Users}
           />
 
           <ReportStat
             title="Vendors"
-            value="184"
-            change="+8.4%"
+            value={
+              loading
+                ? "..."
+                : formatNumber(analytics?.totalVendors)
+            }
+            note="Registered vendors"
             icon={Store}
           />
         </div>
@@ -90,32 +209,39 @@ function AdminReports() {
             <div className="admin-panel-heading">
               <div>
                 <h2>Revenue Growth</h2>
-                <p>Marketplace revenue over the last 6 months</p>
+                <p>
+                  Marketplace revenue over the last
+                  6 months
+                </p>
               </div>
 
               <TrendingUp size={19} />
             </div>
 
-            <div className="report-chart">
-              {[
-                { month: "Apr", height: 42 },
-                { month: "May", height: 56 },
-                { month: "Jun", height: 48 },
-                { month: "Jul", height: 68 },
-                { month: "Aug", height: 77 },
-                { month: "Sep", height: 94 },
-              ].map((item) => (
-                <div className="report-bar-column" key={item.month}>
-                  <div className="report-bar-space">
-                    <div
-                      className="report-bar"
-                      style={{ height: `${item.height}%` }}
-                    ></div>
-                  </div>
+            <div
+              className="report-chart"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: "220px",
+                padding: "20px",
+                textAlign: "center",
+              }}
+            >
+              <div>
+                <TrendingUp
+                  size={34}
+                  style={{
+                    opacity: 0.4,
+                    marginBottom: "12px",
+                  }}
+                />
 
-                  <span>{item.month}</span>
-                </div>
-              ))}
+                <h3>Revenue data unavailable</h3>
+
+                <p>{unavailableText}</p>
+              </div>
             </div>
           </section>
 
@@ -123,33 +249,47 @@ function AdminReports() {
             <div className="admin-panel-heading">
               <div>
                 <h2>Marketplace Insights</h2>
-                <p>Important performance indicators</p>
+                <p>
+                  Important marketplace indicators
+                </p>
               </div>
             </div>
 
             <div className="market-insights">
               <Insight
+                title="Total Users"
+                value={
+                  loading
+                    ? "..."
+                    : formatNumber(analytics?.totalUsers)
+                }
+                note="Registered accounts"
+              />
+
+              <Insight
+                title="Total Shops"
+                value={
+                  loading
+                    ? "..."
+                    : formatNumber(analytics?.totalShops)
+                }
+                note="Marketplace shops"
+              />
+
+              <Insight
+                title="Total Products"
+                value={
+                  loading
+                    ? "..."
+                    : formatNumber(analytics?.totalProducts)
+                }
+                note="Product listings"
+              />
+
+              <Insight
                 title="Average Order Value"
-                value="₦63,677"
-                change="+6.4%"
-              />
-
-              <Insight
-                title="Customer Growth"
-                value="12.5%"
-                change="+3.2%"
-              />
-
-              <Insight
-                title="Vendor Growth"
-                value="8.4%"
-                change="+2.8%"
-              />
-
-              <Insight
-                title="Order Completion"
-                value="89.3%"
-                change="+4.1%"
+                value="—"
+                note="Not yet available"
               />
             </div>
           </section>
@@ -159,8 +299,24 @@ function AdminReports() {
           <div className="admin-panel-heading">
             <div>
               <h2>Top Performing Vendors</h2>
-              <p>Vendors generating the most marketplace activity</p>
+              <p>
+                Vendor rankings based on marketplace
+                sales and order activity
+              </p>
             </div>
+
+            <button
+              type="button"
+              className="admin-icon-button"
+              title="Refresh analytics"
+              aria-label="Refresh analytics"
+              disabled={loading}
+              onClick={() =>
+                setRefreshKey((previous) => previous + 1)
+              }
+            >
+              <RefreshCw size={17} />
+            </button>
           </div>
 
           <div className="admin-table-wrapper">
@@ -175,32 +331,33 @@ function AdminReports() {
               </thead>
 
               <tbody>
-                {topVendors.map((vendor, index) => (
-                  <tr key={vendor.name}>
-                    <td>
-                      <div className="admin-user-cell">
-                        <div className="vendor-rank">
-                          {index + 1}
-                        </div>
+                <tr>
+                  <td colSpan={4}>
+                    <div
+                      style={{
+                        padding: "35px 20px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Store
+                        size={32}
+                        style={{
+                          opacity: 0.4,
+                          marginBottom: "12px",
+                        }}
+                      />
 
-                        <strong>{vendor.name}</strong>
-                      </div>
-                    </td>
+                      <h3>
+                        Vendor rankings unavailable
+                      </h3>
 
-                    <td>{vendor.orders}</td>
-
-                    <td>
-                      <strong>{vendor.revenue}</strong>
-                    </td>
-
-                    <td>
-                      <span className="report-growth">
-                        <ArrowUpRight size={13} />
-                        Growing
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                      <p>
+                        Sales and order statistics
+                        are required to rank vendors.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -213,26 +370,32 @@ function AdminReports() {
 function ReportStat({
   title,
   value,
-  change,
+  note,
   icon: Icon,
   currency = false,
 }) {
   return (
     <article className="admin-report-stat">
       <div className="report-stat-icon">
-        {currency ? <span>₦</span> : <Icon size={20} />}
+        {currency ? (
+          <span>₦</span>
+        ) : Icon ? (
+          <Icon size={20} />
+        ) : (
+          <ShoppingBag size={20} />
+        )}
       </div>
 
       <span>{title}</span>
 
       <strong>{value}</strong>
 
-      <small>{change} this month</small>
+      <small>{note}</small>
     </article>
   );
 }
 
-function Insight({ title, value, change }) {
+function Insight({ title, value, note }) {
   return (
     <div className="market-insight">
       <div>
@@ -240,7 +403,7 @@ function Insight({ title, value, change }) {
         <strong>{value}</strong>
       </div>
 
-      <small>{change}</small>
+      <small>{note}</small>
     </div>
   );
 }

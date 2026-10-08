@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./register.css";
@@ -5,8 +6,8 @@ import { registerUser } from "../services/api";
 
 function Register() {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    role: "customer",
     name: "",
     email: "",
     phoneNumber: "",
@@ -14,21 +15,21 @@ function Register() {
     confirmPassword: "",
   });
 
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setMessage("");
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
@@ -39,26 +40,27 @@ function Register() {
     setLoading(true);
 
     try {
-      const userData = 
-       {...formData }; 
-       delete
-      userData.confirmPassword;
-
-      const data = await registerUser(userData);
-
-      setMessage(data.message || "Registration successful!");
-      navigate("/products");
-
-      setFormData({
+      const userData = {
         role: "customer",
-        name: "",
-        email: "",
-        phoneNumber: "",
-        password: "",
-        confirmPassword: "",
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phoneNumber: formData.phoneNumber.trim(),
+        password: formData.password,
+      };
+
+      await registerUser(userData);
+
+      navigate("/login", {
+        replace: true,
+        state: {
+          message:
+            "Registration successful! Please log in to continue.",
+        },
       });
     } catch (err) {
-      setError(err.message || "Registration failed.");
+      setError(
+        err.message || "Registration failed."
+      );
     } finally {
       setLoading(false);
     }
@@ -79,9 +81,13 @@ function Register() {
 
         <form onSubmit={handleSubmit}>
           <div className="register-field">
-            <label>Full Name</label>
+            <label htmlFor="name">
+              Full Name
+            </label>
+
             <input
               type="text"
+              id="name"
               name="name"
               placeholder="Enter your full name"
               value={formData.name}
@@ -91,9 +97,13 @@ function Register() {
           </div>
 
           <div className="register-field">
-            <label>Email</label>
+            <label htmlFor="email">
+              Email
+            </label>
+
             <input
               type="email"
+              id="email"
               name="email"
               placeholder="Enter your email"
               value={formData.email}
@@ -103,9 +113,13 @@ function Register() {
           </div>
 
           <div className="register-field">
-            <label>Phone Number</label>
+            <label htmlFor="phoneNumber">
+              Phone Number
+            </label>
+
             <input
               type="tel"
+              id="phoneNumber"
               name="phoneNumber"
               placeholder="Enter your phone number"
               value={formData.phoneNumber}
@@ -115,9 +129,13 @@ function Register() {
           </div>
 
           <div className="register-field">
-            <label>Password</label>
+            <label htmlFor="password">
+              Password
+            </label>
+
             <input
               type="password"
+              id="password"
               name="password"
               placeholder="Create a password"
               value={formData.password}
@@ -127,9 +145,13 @@ function Register() {
           </div>
 
           <div className="register-field">
-            <label>Confirm Password</label>
+            <label htmlFor="confirmPassword">
+              Confirm Password
+            </label>
+
             <input
               type="password"
+              id="confirmPassword"
               name="confirmPassword"
               placeholder="Confirm your password"
               value={formData.confirmPassword}
@@ -138,22 +160,28 @@ function Register() {
             />
           </div>
 
-          {error && <p className="error-message">{error}</p>}
-
-          {message && <p className="success-message">{message}</p>}
+          {error && (
+            <p className="error-message">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
             className="register-button"
             disabled={loading}
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading
+              ? "Creating Account..."
+              : "Create Account"}
           </button>
         </form>
 
         <p className="login-text">
           Already have an account?{" "}
-          <Link to="/login">Login</Link>
+          <Link to="/login">
+            Login
+          </Link>
         </p>
       </div>
     </div>
