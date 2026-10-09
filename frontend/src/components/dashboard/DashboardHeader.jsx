@@ -137,7 +137,7 @@ function DashboardHeader({ role = "vendor", onMenuClick }) {
 
     window.dispatchEvent(new Event("user-updated"));
 
-    navigate(isAdmin ? "/login" : "/vendor/login", {
+    navigate(isAdmin ? "/admin/login" : "/vendor/login", {
       replace: true,
     });
   };
