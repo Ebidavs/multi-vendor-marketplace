@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models/user');
 
+//confirm logged out user
+const crypto = require('crypto');
+const { RevokedToken } = require('../models/revokedToken');
+
 const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -13,6 +17,20 @@ const protect = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'No token provided',
+        data: null});
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const revoked = await RevokedToken.findOne({ token: tokenHash });
+    if (revoked) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token', data: null });
+    }
+
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 
@@ -33,6 +51,8 @@ const protect = async (req, res, next) => {
     }
 
     req.user = user;
+    req.token = token;
+    req.tokenExp = decoded.exp;
     return next();
   } catch (err) {
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {

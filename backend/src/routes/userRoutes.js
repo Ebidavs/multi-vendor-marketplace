@@ -23,4 +23,6 @@ router.delete('/delete-account', protect, userController.deleteAccount)
 
 router.put('/deactivate-account', protect, userController.deactivateAccount)
 
+router.post('/logout', protect, userController.logOut)
+
 module.exports = router;
