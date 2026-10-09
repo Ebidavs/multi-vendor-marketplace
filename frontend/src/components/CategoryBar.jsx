@@ -45,18 +45,22 @@ export default function CategoryBar({
         className="no-scrollbar flex flex-1 items-center space-x-2 overflow-x-auto scroll-smooth px-1 py-2"
       >
         {categories.map((cat) => {
-          const isSelected = selectedCategory === cat;
+          // Accept both plain strings and { id, name } objects
+          // (backend categories are selected by their id).
+          const value = typeof cat === "string" ? cat : cat.id;
+          const label = typeof cat === "string" ? cat : cat.name;
+          const isSelected = selectedCategory === value;
           return (
             <button
-              key={cat}
-              onClick={() => onSelectCategory(cat)}
+              key={value}
+              onClick={() => onSelectCategory(value)}
               className={`min-h-11 rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all focus:outline-none shrink-0 ${
                 isSelected
                   ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
                   : "border border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700"
               }`}
             >
-              {cat}
+              {label}
             </button>
           );
         })}

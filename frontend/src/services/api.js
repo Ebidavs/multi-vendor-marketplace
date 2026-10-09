@@ -395,6 +395,29 @@ export const addServerCartItem = (
     },
   });
 
+export const getServerCart = () =>
+  request("/cart", {
+    method: "GET",
+  });
+
+export const updateServerCartItem = (
+  itemId,
+  quantity
+) =>
+  request(`/cart/items/${itemId}`, {
+    method: "PUT",
+    body: {
+      quantity,
+    },
+  });
+
+export const removeServerCartItem = (
+  itemId
+) =>
+  request(`/cart/items/${itemId}`, {
+    method: "DELETE",
+  });
+
 // ==========================================
 // CATEGORIES
 // ==========================================

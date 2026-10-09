@@ -1,16 +1,5 @@
-export const categoriesList = [
-  'All',
-  'Electronics',
-  'Beauty & Health',
-  'Fashion',
-  'Gadgets',
-  'Home & Office',
-  'Audio',
-  'Fitness',
-  'Books & Media',
-  'Accessories',
-  'Wearables',
-];
+// Categories are sourced from the backend (GET /api/v1/categories);
+// this file only keeps vendor/product demo data helpers.
 
 const slugify = (value) =>
   value

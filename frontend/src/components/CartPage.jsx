@@ -49,7 +49,9 @@ export default function CartPage({
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-gray-900">{item.title}</p>
-                  <p className="mt-1 text-sm text-gray-500">Sold by {item.vendorName}</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Sold by {item.vendorName || "Verified Vendor"}
+                  </p>
                   <p className="mt-2 font-semibold text-gray-900">{formatPrice(item.price)}</p>
                   <div className="mt-3 flex items-center gap-3">
                     <div className="inline-flex items-center rounded-md border border-gray-300">
