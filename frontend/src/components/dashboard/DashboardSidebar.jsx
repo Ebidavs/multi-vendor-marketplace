@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Package,
@@ -14,10 +15,31 @@ import {
   X,
 } from "lucide-react";
 
+import { NavLink, useNavigate } from "react-router-dom";
+import { clearToken } from "../../services/api";
+
 import "./dashboard.css";
-import { NavLink } from "react-router-dom";
 
 function DashboardSidebar({ role = "vendor", isOpen, onClose }) {
+  const navigate = useNavigate();
+
+  // Logout and redirect to the appropriate sign-in portal
+  const handleLogout = () => {
+    clearToken();
+
+    if (onClose) {
+      onClose();
+    }
+
+    if (role === "vendor") {
+      navigate("/vendor/login", { replace: true });
+    } else if (role === "admin") {
+      navigate("/admin/login", { replace: true });
+    } else {
+      navigate("/login", { replace: true });
+    }
+  };
+
   const vendorLinks = [
     {
       name: "Overview",
@@ -128,6 +150,7 @@ function DashboardSidebar({ role = "vendor", isOpen, onClose }) {
           <span>XI Market</span>
 
           <button
+            type="button"
             className="sidebar-close"
             onClick={onClose}
           >
@@ -176,7 +199,11 @@ function DashboardSidebar({ role = "vendor", isOpen, onClose }) {
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="logout-button">
+          <button
+            type="button"
+            className="logout-button"
+            onClick={handleLogout}
+          >
             <LogOut size={20} />
             <span>Logout</span>
           </button>
