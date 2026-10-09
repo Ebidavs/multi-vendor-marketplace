@@ -215,26 +215,29 @@ exports.changePassword = async (req, res) => {
 
 
 exports.logOut = async (req, res) => {
-  try{
+  try {
     const tokenHash = crypto.createHash('sha256').update(req.token).digest('hex');
     const expiresAt = new Date(req.tokenExp * 1000);
 
-    const revokedToken = new RevokedToken({ token: tokenHash, expiresAt });
-    await revokedToken.save();
-  
+    // Idempotent: if this token is already revoked (e.g. double logout),
+    // the unique index would error on insert. Upsert silently no-ops instead.
+    await RevokedToken.findOneAndUpdate(
+      { token: tokenHash },
+      { token: tokenHash, expiresAt },
+      { upsert: true, new: true }
+    );
 
     return res.status(200).json({
       success: true,
       message: 'Logged out successfully',
       data: null,
     });
-
-  } catch (err){
-    console.log(err)
+  } catch (err) {
+    console.log(err);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong, please try again",
-      data: null
+      message: 'Something went wrong, please try again',
+      data: null,
     });
   }
 };
