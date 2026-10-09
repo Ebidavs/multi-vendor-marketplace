@@ -16,7 +16,9 @@ export function useProductFilters(products) {
 
   const categoryProducts = useMemo(
     () => products.filter((product) =>
-      selectedCategory === ALL_CATEGORY || product.category === selectedCategory
+      selectedCategory === ALL_CATEGORY ||
+      product.categoryId === selectedCategory ||
+      product.category === selectedCategory
     ),
     [products, selectedCategory]
   );
@@ -79,7 +81,9 @@ export function useProductFilters(products) {
           .includes(searchQuery.toLowerCase());
 
         const matchesCategory =
-          selectedCategory === ALL_CATEGORY || product.category === selectedCategory;
+          selectedCategory === ALL_CATEGORY ||
+          product.categoryId === selectedCategory ||
+          product.category === selectedCategory;
 
         const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
 

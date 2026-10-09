@@ -11,16 +11,3 @@ export const SORT_OPTIONS = {
 
 export const CART_STORAGE_KEY = 'cartItems';
 
-export const CATEGORIES = [
-  ALL_CATEGORY,
-  'Electronics',
-  'Beauty & Health',
-  'Fashion',
-  'Gadgets',
-  'Home & Office',
-  'Audio',
-  'Fitness',
-  'Books & Media',
-  'Accessories',
-  'Wearables',
-];

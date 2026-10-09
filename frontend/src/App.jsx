@@ -1,11 +1,12 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Link,
   Route,
   Routes,
   Navigate,
   useNavigate,
+  useSearchParams,
 } from "react-router-dom";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -19,6 +20,9 @@ import Register from "./pages/register";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/ResetPassword";
 import AccountReactivation from "./pages/AccountReactivation";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
+import HelpPage from "./pages/HelpPage";
 
 // Marketplace Components
 import Navbar from "./components/Navbar";
@@ -34,13 +38,12 @@ import VendorDetail from "./components/VendorDetail";
 
 // Marketplace Hooks / Data
 import { useCart } from "./hooks/useCart";
+import { useCategories } from "./hooks/useCategories";
 import { useProductFilters } from "./hooks/useProductFilters";
-import {
-  categoriesList,
-  dummyVendors,
-} from "./data/productsData";
+import { dummyVendors } from "./data/productsData";
 import { getProducts } from "./services/api";
 import { toProduct } from "./services/mappers";
+import { ALL_CATEGORY } from "./utils/constants";
 
 // Vendor Pages
 import VendorRegister from "./pages/vendor/VendorRegister";
@@ -89,14 +92,20 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(getPageSize);
 
-  // Cart
+  // Cart (localStorage guest cart / backend cart for customers)
   const {
     cartItems,
+    cartError,
+    notice,
+    pendingSync,
     handleAddToCart,
     handleIncreaseQuantity,
     handleDecreaseQuantity,
     handleRemoveItem,
     handleClearCart,
+    retryCartSync,
+    dismissCartError,
+    dismissNotice,
   } = useCart();
 
   const addToCart = (...args) => {
@@ -129,6 +138,49 @@ export default function App() {
     handleResetFilters,
   } = useProductFilters(products);
 
+  // Backend categories for the product listing
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    categories: backendCategories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    retry: retryCategories,
+  } = useCategories();
+
+  const categoryOptions = useMemo(
+    () => [
+      { id: ALL_CATEGORY, name: ALL_CATEGORY },
+      ...backendCategories.map((category) => ({
+        id: category.id,
+        name: category.name,
+      })),
+    ],
+    [backendCategories]
+  );
+
+  // The ?category= query param is the single source of truth so
+  // Home category links (/products?category=<id>) and the
+  // category bar stay in sync.
+  useEffect(() => {
+    const categoryParam =
+      searchParams.get("category") || ALL_CATEGORY;
+
+    setSelectedCategory((current) =>
+      current === categoryParam ? current : categoryParam
+    );
+    setCurrentPage((page) => (page === 1 ? page : 1));
+  }, [searchParams, setSelectedCategory]);
+
+  const handleSelectCategory = (categoryId) => {
+    setCurrentPage(1);
+
+    if (categoryId === ALL_CATEGORY) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ category: categoryId });
+    }
+  };
+
   // Pagination
   const pageCount = Math.ceil(
     filteredProducts.length / pageSize
@@ -153,9 +205,14 @@ export default function App() {
     (_, index) => firstVisiblePage + index
   );
 
-  // Load marketplace products
+  // Load marketplace products (server-side category filtering)
   useEffect(() => {
     let isCurrent = true;
+
+    const categoryQuery =
+      selectedCategory !== ALL_CATEGORY
+        ? `&category=${encodeURIComponent(selectedCategory)}`
+        : "";
 
     const loadProducts = async () => {
       setProductsLoading(true);
@@ -163,7 +220,7 @@ export default function App() {
 
       try {
         const firstPage = await getProducts(
-          "?page=1&limit=50"
+          `?page=1&limit=50${categoryQuery}`
         );
 
         if (!Array.isArray(firstPage?.products)) {
@@ -185,7 +242,7 @@ export default function App() {
           page += 1
         ) {
           const pageResult = await getProducts(
-            `?page=${page}&limit=50`
+            `?page=${page}&limit=50${categoryQuery}`
           );
 
           if (!Array.isArray(pageResult?.products)) {
@@ -223,7 +280,7 @@ export default function App() {
     return () => {
       isCurrent = false;
     };
-  }, [productsRetry]);
+  }, [productsRetry, selectedCategory]);
 
   // Responsive page size
   useEffect(() => {
@@ -257,13 +314,39 @@ export default function App() {
         />
       </div>
 
-      {/* Categories */}
+      {/* Categories (loaded from the backend) */}
       <div className="py-2">
-        <CategoryBar
-          categories={categoriesList}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
+        {categoriesError ? (
+          <div
+            className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700"
+            role="alert"
+          >
+            <span>{categoriesError}</span>
+            <button
+              type="button"
+              onClick={retryCategories}
+              className="shrink-0 font-semibold underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : (
+          <>
+            {categoriesLoading && (
+              <p
+                className="mb-1 text-center text-xs text-gray-400"
+                role="status"
+              >
+                Loading categories...
+              </p>
+            )}
+            <CategoryBar
+              categories={categoryOptions}
+              selectedCategory={selectedCategory}
+              onSelectCategory={handleSelectCategory}
+            />
+          </>
+        )}
       </div>
 
       {/* Products and filters */}
@@ -438,6 +521,55 @@ export default function App() {
         </div>
       </div>
 
+      {/* Cart feedback banner (errors keep a Retry action while a
+          guest cart is still waiting to sync) */}
+      <div className="pointer-events-none fixed bottom-24 left-1/2 z-50 flex w-[min(92vw,26rem)] -translate-x-1/2 flex-col gap-2">
+        {notice && (
+          <div
+            role="status"
+            className="pointer-events-auto flex items-start justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg"
+          >
+            <span>{notice.text}</span>
+            <button
+              type="button"
+              aria-label="Dismiss notification"
+              onClick={dismissNotice}
+              className="shrink-0 font-bold text-emerald-700 hover:text-emerald-900"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {cartError && (
+          <div
+            role="alert"
+            className="pointer-events-auto flex items-start justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-lg"
+          >
+            <span>{cartError}</span>
+            <div className="flex shrink-0 items-center gap-2">
+              {pendingSync && (
+                <button
+                  type="button"
+                  onClick={retryCartSync}
+                  className="font-semibold underline"
+                >
+                  Retry
+                </button>
+              )}
+              <button
+                type="button"
+                aria-label="Dismiss error"
+                onClick={dismissCartError}
+                className="font-bold text-red-700 hover:text-red-900"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Cart bar */}
       <CartBar
         cartItems={cartItems}
@@ -478,7 +610,7 @@ export default function App() {
 
         <Route
           path="/"
-          element={<Home />}
+          element={<Home onAddToCart={addToCart} />}
         />
 
         <Route
@@ -753,6 +885,31 @@ export default function App() {
           <Route
             path="/admin/settings"
             element={<AdminSettings />}
+          />
+        </Route>
+
+        {/* PROTECTED CUSTOMER ACCOUNT ROUTES */}
+
+        <Route
+          element={
+            <ProtectedRoute
+              allowedRole="customer"
+            />
+          }
+        >
+          <Route
+            path="/profile"
+            element={<ProfilePage />}
+          />
+
+          <Route
+            path="/settings"
+            element={<SettingsPage />}
+          />
+
+          <Route
+            path="/help"
+            element={<HelpPage />}
           />
         </Route>
 

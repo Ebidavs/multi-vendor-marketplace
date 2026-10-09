@@ -507,3 +507,21 @@
     padding-right: 16px;
   }
 }
+
+/* Category cards render as links to the filtered products page. */
+a.category-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Disabled "Out of stock" product button. */
+.product-footer button:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.product-footer button:disabled:hover {
+  background: #e5e7eb;
+}

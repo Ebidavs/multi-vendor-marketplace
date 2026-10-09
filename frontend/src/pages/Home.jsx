@@ -1,68 +1,75 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import shoppingImage from "../assets/web-shopping.svg";
+import { useCategories } from "../hooks/useCategories";
+import { getProducts } from "../services/api";
+import { toProduct } from "../services/mappers";
 import "./Home.css";
 
+const FEATURED_QUERY = "?page=1&limit=6&sort=newest";
 
-function Home() {
-  const categories = [
-    { icon: "💻", name: "Electronics", description: "Phones, laptops & gadgets" },
-    { icon: "👗", name: "Fashion", description: "Clothing, shoes & accessories" },
-    { icon: "🏠", name: "Home Living", description: "Furniture & home essentials" },
-    { icon: "💄", name: "Beauty", description: "Makeup & self-care" },
-    { icon: "🏃", name: "Sports", description: "Fitness gear & outdoor essentials" },
-    { icon: "🛍️", name: "Deals", description: "Hot picks from trusted sellers" },
-  ];
 
-  const products = [
-    {
-      name: "Wireless Headphones",
-      price: "N45,000",
-      vendor: "SoundNest",
-      rating: 4.9,
-      image:
-        "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      name: "Smart Watch",
-      price: "N60,000",
-      vendor: "Urban Gear",
-      rating: 4.8,
-      image:
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      name: "Ladies Handbag",
-      price: "N32,000",
-      vendor: "Veloura",
-      rating: 4.7,
-      image:
-        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      name: "Premium Sneakers",
-      price: "N28,000",
-      vendor: "Stride Co.",
-      rating: 4.6,
-      image:
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      name: "Perfume Set",
-      price: "N25,000",
-      vendor: "Bloom Atelier",
-      rating: 4.9,
-      image:
-        "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      name: "Kitchen Essentials",
-      price: "N30,000",
-      vendor: "HomeCraft",
-      rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=80",
-    },
-  ];
+function Home({ onAddToCart }) {
+  // Categories come from the backend so new admin-created
+  // categories show up without frontend changes.
+  const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    retry: retryCategories,
+  } = useCategories();
+
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState("");
+  const [productsRetry, setProductsRetry] = useState(0);
+
+  // Featured products come straight from the backend catalog.
+  useEffect(() => {
+    let isCurrent = true;
+
+    const loadProducts = async () => {
+      setProductsLoading(true);
+      setProductsError("");
+
+      try {
+        const data = await getProducts(FEATURED_QUERY);
+
+        if (!Array.isArray(data?.products)) {
+          throw new Error(
+            "The product service returned an invalid response."
+          );
+        }
+
+        if (isCurrent) {
+          setProducts(data.products.map(toProduct));
+        }
+      } catch (err) {
+        if (isCurrent) {
+          setProductsError(
+            err.message || "Unable to load products."
+          );
+        }
+      } finally {
+        if (isCurrent) {
+          setProductsLoading(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [productsRetry]);
+
+  const handleAddToCart = (product) => {
+    if (onAddToCart) {
+      onAddToCart(product);
+    }
+  };
 
   return (
     <div className="home-page">
@@ -130,17 +137,52 @@ function Home() {
             <h2>Shop by category</h2>
           </div>
 
-          <div className="category-grid">
-            {categories.map((category) => (
-              <article key={category.name} className="category-card">
-                <div className="category-icon" aria-hidden="true">
-                  {category.icon}
-                </div>
-                <h3>{category.name}</h3>
-                <p>{category.description}</p>
-              </article>
-            ))}
-          </div>
+          {categoriesLoading ? (
+            <p
+              className="py-6 text-center text-sm text-gray-500"
+              role="status"
+            >
+              Loading categories...
+            </p>
+          ) : categoriesError ? (
+            <div className="py-6 text-center" role="alert">
+              <p className="text-sm text-gray-600">
+                {categoriesError}
+              </p>
+              <button
+                type="button"
+                onClick={retryCategories}
+                className="mt-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+              >
+                Try again
+              </button>
+            </div>
+          ) : categories.length === 0 ? (
+            <p className="py-6 text-center text-sm text-gray-500">
+              No categories available yet.
+            </p>
+          ) : (
+            <div className="category-grid">
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  to={`/products?category=${category.id}`}
+                  className="category-card"
+                >
+                  <div className="category-icon" aria-hidden="true">
+                    {category.icon || "🛍️"}
+                  </div>
+                  <h3>{category.name}</h3>
+                  <p>
+                    {category.description ||
+                      (typeof category.productCount === "number"
+                        ? `${category.productCount} products`
+                        : "")}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="featured-section" id="featured">
@@ -154,27 +196,72 @@ function Home() {
             </Link>
           </div>
 
-          <div className="product-grid">
-            {products.map((product) => (
-              <article key={product.name} className="product-card">
-                <div className="product-image">
-                  <img src={product.image} alt={product.name} />
-                </div>
-                <div className="product-meta">
-                  <span className="product-tag">{product.vendor}</span>
-                  <h3>{product.name}</h3>
-                  <div className="product-rating" aria-label={`Rated ${product.rating} out of 5`}>
-                    <span>★★★★★</span>
-                    <small>{product.rating}</small>
+          {productsLoading ? (
+            <p
+              className="py-8 text-center text-sm text-gray-500"
+              role="status"
+            >
+              Loading products...
+            </p>
+          ) : productsError ? (
+            <div className="py-8 text-center" role="alert">
+              <p className="text-sm text-gray-600">
+                {productsError}
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setProductsRetry((retry) => retry + 1)
+                }
+                className="mt-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+              >
+                Try again
+              </button>
+            </div>
+          ) : products.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-500">
+              No products available yet. Check back soon!
+            </p>
+          ) : (
+            <div className="product-grid">
+              {products.map((product) => (
+                <article key={product.id} className="product-card">
+                  <div className="product-image">
+                    <img src={product.image} alt={product.title} />
                   </div>
-                  <div className="product-footer">
-                    <strong>{product.price}</strong>
-                    <button type="button">Add to cart</button>
+                  <div className="product-meta">
+                    <span className="product-tag">
+                      {product.category || "Marketplace"}
+                    </span>
+                    <h3>{product.title}</h3>
+                    {product.rating ? (
+                      <div
+                        className="product-rating"
+                        aria-label={`Rated ${product.rating} out of 5`}
+                      >
+                        <span>★★★★★</span>
+                        <small>{product.rating}</small>
+                      </div>
+                    ) : null}
+                    <div className="product-footer">
+                      <strong>
+                        ₦{(product.price || 0).toLocaleString()}
+                      </strong>
+                      <button
+                        type="button"
+                        disabled={!product.inStock}
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        {product.inStock
+                          ? "Add to cart"
+                          : "Out of stock"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </div>
