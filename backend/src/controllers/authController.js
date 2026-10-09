@@ -59,7 +59,7 @@ exports.register = async (req, res) => {
       data: null
     });
   }
-}
+};
 
 
 exports.logIn = async (req, res) => {
@@ -127,7 +127,7 @@ exports.logIn = async (req, res) => {
       data: null
     });
   }
-}
+};
 
 
 exports.generateOtp = async (req, res) => {

@@ -2,6 +2,10 @@ const { User, Customer, Vendor, Admin}  = require('../models/user')
 const bcrypt = require('bcryptjs')
 const { setRelatedResourcesActive } = require('../utils/accountLifecycle');
 
+//Log out
+const crypto = require('crypto');
+const { RevokedToken } = require('../models/revokedToken');
+
 exports.updateProfile = async (req, res) => {
   try{
     const id  = req.user.id;
@@ -85,7 +89,7 @@ exports.getProfile = async (req, res) => {
 };
 
 
-//assuming that products created by vendor is 
+
 exports.deleteAccount = async (req, res) => {
   try{
     
@@ -185,11 +189,6 @@ exports.deactivateAccount = async (req, res) => {
 
 
 
-
-
-
-
-
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -211,5 +210,34 @@ exports.changePassword = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({ success: false, message: 'Something went wrong, please try again', data: null });
+  }
+};
+
+
+exports.logOut = async (req, res) => {
+  try {
+    const tokenHash = crypto.createHash('sha256').update(req.token).digest('hex');
+    const expiresAt = new Date(req.tokenExp * 1000);
+
+    // Idempotent: if this token is already revoked (e.g. double logout),
+    // the unique index would error on insert. Upsert silently no-ops instead.
+    await RevokedToken.findOneAndUpdate(
+      { token: tokenHash },
+      { token: tokenHash, expiresAt },
+      { upsert: true, new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+      data: null,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: 'Something went wrong, please try again',
+      data: null,
+    });
   }
 };
