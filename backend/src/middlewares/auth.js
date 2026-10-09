@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models/user');
 
+// Token revocation support (logout) — revocation list checked by `protect`.
+const crypto = require('crypto');
+const { RevokedToken } = require('../models/revokedToken');
+
 const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -12,8 +16,30 @@ const protect = async (req, res, next) => {
       });
     }
 
-    const token = authHeader.split(' ')[1];
+        const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or missing bearer token',
+        data: null,
+      });
+    }
+
+    // Verify the signature first (fast, no DB) so malformed/expired tokens are
+    // rejected by the outer catch before we query the revocation collection —
+    // which could be slow or unavailable when DB is down.
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const revoked = await RevokedToken.findOne({ token: tokenHash });
+    if (revoked) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token',
+        data: null,
+      });
+    }
+
     const user = await User.findById(decoded.id);
 
     if (!user || user.deletedAt) {
@@ -33,6 +59,8 @@ const protect = async (req, res, next) => {
     }
 
     req.user = user;
+    req.token = token;
+    req.tokenExp = decoded.exp;
     return next();
   } catch (err) {
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
