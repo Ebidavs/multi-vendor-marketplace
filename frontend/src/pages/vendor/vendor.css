@@ -5660,3 +5660,24 @@
 .existing-product-images small {
   color: #6b7280;
 }
+
+/* ==========================================
+   VENDOR ANALYTICS - STAT FIGURES
+========================================== */
+
+.vendor-analytics-page .stat-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin: 10px 0;
+}
+
+.vendor-analytics-page .stat-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.vendor-analytics-page .top-products-list strong {
+  font-weight: 700;
+}
